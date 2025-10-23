@@ -18,6 +18,17 @@ CSVs are expected in the `input` directory with the following names:
 
 The Saved CSV Import mappings can be found [here](./SAVED_IMPORTS.md).
 
+## Notes
+
+Dear / Cin7 Families - NetSuite Matrix Items:
+
+- We are only handling Apparel with Sizes as Matrix Items.
+- All other Families will be handled as standard Inventory Items.
+
+Import Sheets:
+
+- Remove all apparel that will be handled as Matrix Items from the `Inventory_List.csv` before running the Inventory Item import script. Create its own CSV `Inventory_List_Matrix.csv` for the Matrix Item import script.
+
 ### RUN
 
 Inventory Items:
