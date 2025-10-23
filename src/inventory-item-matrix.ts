@@ -12,11 +12,8 @@ import type { DearInventoryItemRow } from './lib/types/dear';
 // generate object for families with key being the family name, then array of items in that family
 
 // local script constants
-const DEBUG = true;
+const DEBUG = false;
 const PRODUCT_CODE = 'ProductCode'; // dear sku field - from inventory list
-const PRODUCT_SKU = 'ProductSKU'; // dear sku field - from assembly bom list
-const COMPONENT_SKU = 'ComponentSKU'; // dear sku field - component sku from assembly bom list
-const VARIANT_SKU = 'Variant SKU'; // shopify sku field
 const FAMILY_SKU = 'ProductFamilySKU'; // dear sku field - family sku
 
 async function main() {
@@ -35,12 +32,6 @@ async function main() {
       'matrix inventory item rows.',
     );
 
-    // log all skus of filtered inventory items
-    // console.log('Filtered Inventory Item SKUs:');
-    // for (const item of inventoryItemRows) {
-    //   console.log(item[PRODUCT_CODE]);
-    // }
-
     // create matrix / family object for use later
     const matrixItems: { [family: string]: DearInventoryItemRow[] } = {};
     for (const item of inventoryItemRows) {
@@ -52,8 +43,8 @@ async function main() {
     }
 
     // log all families
+    console.log('There are ', Object.keys(matrixItems).length, 'families:');
     if (DEBUG) {
-      console.log('There are ', Object.keys(matrixItems).length, 'families:');
       for (const family in matrixItems) {
         console.log(
           'Family SKU:',

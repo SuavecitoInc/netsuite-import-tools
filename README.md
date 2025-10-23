@@ -14,6 +14,10 @@ CSVs are expected in the `input` directory with the following names:
 - Export data from Shopify as CSV file.
   - `SHOPIFY-TN-ITEMS.csv`
 
+## NetSuite Import Mappings
+
+The Saved CSV Import mappings can be found [here](./SAVED_IMPORTS.md).
+
 ### RUN
 
 Inventory Items:
@@ -65,4 +69,17 @@ NetSuite inventory items CSV written to NetSuite_Assembly_Items.csv
 
 Matrix Inventory Items:
 
-TODO: Add matrix inventory item generation instructions here.
+This script will generate a CSV file named `NetSuite_Inventory_Items_Matrix.csv` in `output` directory. This file contains the matrix inventory items ready for import into NetSuite.
+
+```bash
+❯ npm run inventory-item-matrix
+
+> netsuite-import-tools@0.0.1 inventory-item-matrix
+> tsx src/inventory-item-matrix.ts
+
+Getting Matrix Items...
+There are 243 matrix inventory item rows.
+There are  42 families:
+Generated 285 NetSuite inventory items for import.
+NetSuite inventory items CSV written to NetSuite_Inventory_Items_Matrix.csv
+```

@@ -7,11 +7,8 @@ import type {
   DearInventoryItemRow,
 } from './lib/types/dear';
 
-// TODO:
-// generate assembly item list using Assembly_BOM_List field `ProductSKU`, use this list to exclude items from inventory item list using field `ProductCode`
-// generate NetSuite inventory item import list
-
 // local script constants
+const DEBUG = false;
 const PRODUCT_CODE = 'ProductCode'; // dear sku field - from inventory list
 const PRODUCT_SKU = 'ProductSKU'; // dear sku field - from assembly bom list
 const COMPONENT_SKU = 'ComponentSKU'; // dear sku field - component sku from assembly bom list
@@ -58,10 +55,12 @@ async function main() {
     );
 
     // log all skus to exclude
-    // console.log('Assembly Item SKUs to Exclude:');
-    // for (const sku of assemblyItemSKUs) {
-    //   console.log(sku);
-    // }
+    if (DEBUG) {
+      console.log('Assembly Item SKUs to Exclude:');
+      for (const sku of assemblyItemSKUs) {
+        console.log(sku);
+      }
+    }
 
     // Further processing to generate inventory item import list would go here
     const inventoryItemFilePath = 'input/Inventory_List';
@@ -103,10 +102,12 @@ async function main() {
     );
 
     // log all skus of filtered inventory items
-    // console.log('Filtered Inventory Item SKUs:');
-    // for (const item of filteredInventoryItems) {
-    //   console.log(item[PRODUCT_CODE]);
-    // }
+    if (DEBUG) {
+      console.log('Filtered Inventory Item SKUs:');
+      for (const item of filteredInventoryItems) {
+        console.log(item[PRODUCT_CODE]);
+      }
+    }
 
     // create object for NetSuite import
     const netSuiteImportItems = filteredInventoryItems.map((item) => {

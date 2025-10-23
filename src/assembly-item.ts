@@ -6,14 +6,8 @@ import type {
   DearInventoryItemRow,
 } from './lib/types/dear';
 
-// inventory items must exist before assemblies can be created
-// TODO:
-// use Assembly_BOM_List to generate list of assemblies using the field `ProductSKU`
-// use Assembly_BOM_LIST to get components and quantityes for each assembly item `ComponentSKU` and `Quantity`
-// source assembly item via `ProductSKU` and components via `ComponentSKU` from Inventory_List
-// generate the import csv
-
 // local script constants
+const DEBUG = false;
 const PRODUCT_CODE = 'ProductCode'; // dear sku field - from inventory list
 const PRODUCT_SKU = 'ProductSKU'; // dear sku field - from assembly bom list
 const VARIANT_SKU = 'Variant SKU'; // shopify sku field
@@ -80,14 +74,16 @@ async function main() {
     );
 
     // log all assemblies and their components
-    // for (const [assemblySKU, assemblyData] of Object.entries(assemblies)) {
-    //   console.log(`Assembly SKU: ${assemblySKU}`);
-    //   for (const component of assemblyData.components) {
-    //     console.log(
-    //       `  Component SKU: ${component.componentSKU}, Quantity: ${component.quantity}`,
-    //     );
-    //   }
-    // }
+    if (DEBUG) {
+      for (const [assemblySKU, assemblyData] of Object.entries(assemblies)) {
+        console.log(`Assembly SKU: ${assemblySKU}`);
+        for (const component of assemblyData.components) {
+          console.log(
+            `  Component SKU: ${component.componentSKU}, Quantity: ${component.quantity}`,
+          );
+        }
+      }
+    }
 
     // load inventory items list exported from DEAR
     const inventoryItemFilePath = 'input/Inventory_List';
@@ -121,10 +117,12 @@ async function main() {
     );
 
     // log all skus of filtered inventory items
-    // console.log('Filtered Inventory Item SKUs:');
-    // for (const item of filteredAssemblyItems) {
-    //   console.log(item[PRODUCT_CODE]);
-    // }
+    if (DEBUG) {
+      console.log('Filtered Inventory Item SKUs:');
+      for (const item of filteredAssemblyItems) {
+        console.log(item[PRODUCT_CODE]);
+      }
+    }
 
     // create object for NetSuite import
 
