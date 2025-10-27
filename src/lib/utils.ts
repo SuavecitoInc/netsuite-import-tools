@@ -48,7 +48,7 @@ export const getMaxComponentCount = (
     { components: { componentSKU: string; quantity: number }[] }
   >,
 ) => {
-  // find assemby items with the most components for logging
+  // find assembly items with the most components for logging
   let maxComponents = 0;
   let assemblyWithMostComponents = null;
   Object.keys(assemblies).forEach((assemblySKU) => {
@@ -73,4 +73,8 @@ export const barcodeStringToNumber = (barcode: string) => {
 
 export const handleToTitleCase = (str: string) => {
   return str.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+export const addPrefixToSKU = (sku: string, prefix: string = 'TN-') => {
+  return `${prefix}${sku}`;
 };
