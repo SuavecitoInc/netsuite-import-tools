@@ -34,12 +34,9 @@ async function main() {
     console.log('There are', assemblyBomRows.length, 'assembly BOM rows.');
 
     // create a set of ProductSKU to exclude from inventory items
-    const assemblyItemSKUs = new Set<string>();
-    for (const row of assemblyBomRows) {
-      if (row[PRODUCT_SKU]) {
-        assemblyItemSKUs.add(row[PRODUCT_SKU]);
-      }
-    }
+    const assemblyItemSKUs = new Set(
+      assemblyBomRows.map((row) => row[PRODUCT_SKU]).filter(Boolean),
+    );
 
     const componentSKUs = new Set<string>();
     for (const row of assemblyBomRows) {
@@ -78,13 +75,11 @@ async function main() {
 
     // join with componentSKUs to include components as well
     console.log('Joining component SKUs to Shopify item SKUs...');
-    for (const sku of componentSKUs) {
-      shopifyItemSKUs.add(sku);
-    }
+    const allItemSKUs = new Set([...shopifyItemSKUs, ...componentSKUs]);
 
     // sanity check, filtering out items not in shopifyItemSKUs
     const shopifyInventoryItems = inventoryItemRows.filter((item) =>
-      shopifyItemSKUs.has(item[PRODUCT_CODE]),
+      allItemSKUs.has(item[PRODUCT_CODE]),
     );
 
     // Filter out assembly items from inventory items
@@ -150,7 +145,7 @@ async function main() {
     );
 
     // export file name
-    const outputFilename = 'NetSuite_Inventory_Items.csv';
+    const outputFilename = 'NetSuite_Inventory_Items';
 
     const headers = [
       { id: 'externalid', title: 'externalid' },
