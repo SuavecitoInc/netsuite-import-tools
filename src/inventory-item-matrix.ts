@@ -8,19 +8,150 @@ import {
 import { INVENTORY_ITEM_MAPPINGS } from './lib/configs/dear';
 import type { DearInventoryItemRow } from './lib/types/dear';
 
-// TODO:
-// generate object for families with key being the family name, then array of items in that family
-
 // local script constants
 const DEBUG = false;
-const PRODUCT_CODE = 'ProductCode'; // dear sku field - from inventory list
-const FAMILY_SKU = 'ProductFamilySKU'; // dear sku field - family sku
+const PRODUCT_CODE = 'ProductCode';
+const FAMILY_SKU = 'ProductFamilySKU';
+
+// Types
+interface NetSuiteMatrixItem {
+  externalid: string;
+  name: string;
+  displayname: string;
+  barcode: string | number;
+  size: string;
+  matrixtype: 'Parent Matrix Item' | 'Child Matrix Item';
+  subitemof: string;
+  subsidiary: string | number | boolean | null;
+  class: string | number | boolean | null;
+  costingmethod: string | number | boolean | null;
+  usebins: string | number | boolean | null;
+  atpmethod: string | number | boolean | null;
+  manufacturer: string;
+  countryofmanufacture: string | number | boolean | null;
+  salesdescription: string;
+  weight: string;
+  weightunit: string;
+  salesprice: string;
+  pricelevel1: string | number | boolean | null;
+  pricelevel1price: string;
+  pricelevel1currency: string | number | boolean | null;
+  pricelevel2: string | number | boolean | null;
+  pricelevel2price: string;
+  pricelevel2currency: string | number | boolean | null;
+  istaxable: string | number | boolean | null;
+  taxschedule: string | number | boolean | null;
+}
+
+// Helper functions
+function groupByFamily(
+  items: DearInventoryItemRow[],
+): Record<string, DearInventoryItemRow[]> {
+  return items.reduce(
+    (acc, item) => {
+      const familySKU = item[FAMILY_SKU];
+      if (!familySKU) {
+        console.warn(`Item ${item[PRODUCT_CODE]} has no family SKU, skipping`);
+        return acc;
+      }
+      if (!acc[familySKU]) {
+        acc[familySKU] = [];
+      }
+      acc[familySKU].push(item);
+      return acc;
+    },
+    {} as Record<string, DearInventoryItemRow[]>,
+  );
+}
+
+function getBaseItemProperties(item: DearInventoryItemRow) {
+  return {
+    subsidiary: INVENTORY_ITEM_MAPPINGS.subsidiary.default,
+    class: INVENTORY_ITEM_MAPPINGS.class.default,
+    costingmethod: INVENTORY_ITEM_MAPPINGS.costingmethod.default,
+    usebins: INVENTORY_ITEM_MAPPINGS.usebins.default,
+    atpmethod: INVENTORY_ITEM_MAPPINGS.atpmethod.default,
+    countryofmanufacture: INVENTORY_ITEM_MAPPINGS.countryofmanufacture.default,
+    istaxable: INVENTORY_ITEM_MAPPINGS.istaxable.default,
+    taxschedule: INVENTORY_ITEM_MAPPINGS.taxschedule.default,
+    manufacturer: item[INVENTORY_ITEM_MAPPINGS.manufacturer.field],
+  };
+}
+
+function createParentItem(
+  familySKU: string,
+  defaultItem: DearInventoryItemRow,
+): NetSuiteMatrixItem {
+  return {
+    externalid: familySKU,
+    name: familySKU,
+    displayname: handleToTitleCase(familySKU),
+    barcode: '',
+    size: '',
+    matrixtype: 'Parent Matrix Item',
+    subitemof: '',
+    ...getBaseItemProperties(defaultItem),
+    salesdescription: familySKU,
+    weight: '',
+    weightunit: '',
+    salesprice: '',
+    pricelevel1: '',
+    pricelevel1price: '',
+    pricelevel1currency: '',
+    pricelevel2: '',
+    pricelevel2price: '',
+    pricelevel2currency: '',
+  };
+}
+
+function createChildItem(
+  item: DearInventoryItemRow,
+  familySKU: string,
+): NetSuiteMatrixItem {
+  return {
+    externalid: item[INVENTORY_ITEM_MAPPINGS.externalid.field],
+    name: item[INVENTORY_ITEM_MAPPINGS.name.field],
+    displayname: item[INVENTORY_ITEM_MAPPINGS.displayname.field],
+    barcode: barcodeStringToNumber(item[INVENTORY_ITEM_MAPPINGS.barcode.field]),
+    size: item['ProductFamilyOption1Value'],
+    matrixtype: 'Child Matrix Item',
+    subitemof: familySKU,
+    ...getBaseItemProperties(item),
+    salesdescription: item[INVENTORY_ITEM_MAPPINGS.salesdescription.field],
+    weight: item[INVENTORY_ITEM_MAPPINGS.weight.field],
+    weightunit: item[INVENTORY_ITEM_MAPPINGS.weightunit.field],
+    salesprice: item[INVENTORY_ITEM_MAPPINGS.salesprice.field],
+    pricelevel1: INVENTORY_ITEM_MAPPINGS.pricelevel1.default,
+    pricelevel1price: item[INVENTORY_ITEM_MAPPINGS.pricelevel1price.field],
+    pricelevel1currency: INVENTORY_ITEM_MAPPINGS.pricelevel1currency.default,
+    pricelevel2: INVENTORY_ITEM_MAPPINGS.pricelevel2.default,
+    pricelevel2price: item[INVENTORY_ITEM_MAPPINGS.pricelevel2price.field],
+    pricelevel2currency: INVENTORY_ITEM_MAPPINGS.pricelevel2currency.default,
+  };
+}
+
+function generateNetSuiteItems(
+  matrixItems: Record<string, DearInventoryItemRow[]>,
+): NetSuiteMatrixItem[] {
+  return Object.entries(matrixItems).flatMap(([familySKU, childItems]) => {
+    if (!childItems.length) {
+      console.warn(`Family ${familySKU} has no items, skipping`);
+      return [];
+    }
+
+    const parentItem = createParentItem(familySKU, childItems[0]);
+    const childImportItems = childItems.map((item) =>
+      createChildItem(item, familySKU),
+    );
+
+    return [parentItem, ...childImportItems];
+  });
+}
 
 async function main() {
   try {
     console.log('Getting Matrix Items...');
 
-    // Further processing to generate inventory item import list would go here
     const inventoryItemFilePath = 'input/Inventory_Matrix_List';
     const inventoryItemRows = await parseCSV<DearInventoryItemRow>(
       inventoryItemFilePath,
@@ -32,112 +163,27 @@ async function main() {
       'matrix inventory item rows.',
     );
 
-    // create matrix / family object for use later
-    const matrixItems: { [family: string]: DearInventoryItemRow[] } = {};
-    for (const item of inventoryItemRows) {
-      const familySKU = item[FAMILY_SKU];
-      if (!matrixItems[familySKU]) {
-        matrixItems[familySKU] = [];
-      }
-      matrixItems[familySKU].push(item);
-    }
+    const matrixItems = groupByFamily(inventoryItemRows);
+    const familyCount = Object.keys(matrixItems).length;
 
-    // log all families
-    console.log('There are ', Object.keys(matrixItems).length, 'families:');
+    console.log('There are', familyCount, 'families');
+
     if (DEBUG) {
-      for (const family in matrixItems) {
+      Object.entries(matrixItems).forEach(([family, items]) => {
         console.log(
           'Family SKU:',
           family,
           'has items:',
           JSON.stringify(
-            matrixItems[family].map((item) => item[PRODUCT_CODE]),
+            items.map((item) => item[PRODUCT_CODE]),
             null,
             2,
           ),
         );
-      }
+      });
     }
 
-    // create NetSuite import items from matrix items
-    const netSuiteImportItems = [];
-
-    Object.keys(matrixItems).forEach((familySKU) => {
-      const childItems = matrixItems[familySKU];
-      const defaultItem = childItems[0];
-      const parentItem = {
-        externalid: familySKU,
-        name: familySKU,
-        displayName: handleToTitleCase(familySKU), // fix this to convert to proper name later
-        barcode: '', // no barcode for family item
-        size: '', // no size for family item
-        matrixtype: 'Parent Matrix Item',
-        subitemof: '', // no parent for family item
-        subsidiary: INVENTORY_ITEM_MAPPINGS.subsidiary.default,
-        class: INVENTORY_ITEM_MAPPINGS.class.default,
-        costingmethod: INVENTORY_ITEM_MAPPINGS.costingmethod.default,
-        usebins: INVENTORY_ITEM_MAPPINGS.usebins.default,
-        atpmethod: INVENTORY_ITEM_MAPPINGS.atpmethod.default,
-        manufacturer: defaultItem[INVENTORY_ITEM_MAPPINGS.manufacturer.field],
-        countryofmanufacture:
-          INVENTORY_ITEM_MAPPINGS.countryofmanufacture.default,
-        salesdescription: familySKU, // fix this to convert to proper name later
-        weight: '',
-        weightunit: '',
-        salesprice: '',
-        pricelevel1: '',
-        pricelevel1price: '',
-        pricelevel1currency: '',
-        pricelevel2: '',
-        pricelevel2price: '',
-        pricelevel2currency: '',
-        istaxable: INVENTORY_ITEM_MAPPINGS.istaxable.default,
-        taxschedule: INVENTORY_ITEM_MAPPINGS.taxschedule.default,
-      };
-      // add parent item to netsuite import items
-      netSuiteImportItems.push(parentItem);
-
-      // add child items to netsuite import items
-      childItems.forEach((item) => {
-        const childImportItem = {
-          externalid: item[INVENTORY_ITEM_MAPPINGS.externalid.field],
-          name: item[INVENTORY_ITEM_MAPPINGS.name.field],
-          displayname: item[INVENTORY_ITEM_MAPPINGS.displayname.field],
-          barcode: barcodeStringToNumber(
-            item[INVENTORY_ITEM_MAPPINGS.barcode.field],
-          ),
-          size: item['ProductFamilyOption1Value'],
-          matrixtype: 'Child Matrix Item',
-          subitemof: familySKU,
-          subsidiary: INVENTORY_ITEM_MAPPINGS.subsidiary.default,
-          class: INVENTORY_ITEM_MAPPINGS.class.default,
-          costingmethod: INVENTORY_ITEM_MAPPINGS.costingmethod.default,
-          usebins: INVENTORY_ITEM_MAPPINGS.usebins.default,
-          atpmethod: INVENTORY_ITEM_MAPPINGS.atpmethod.default,
-          manufacturer: item[INVENTORY_ITEM_MAPPINGS.manufacturer.field],
-          countryofmanufacture:
-            INVENTORY_ITEM_MAPPINGS.countryofmanufacture.default,
-          salesdescription:
-            item[INVENTORY_ITEM_MAPPINGS.salesdescription.field],
-          weight: item[INVENTORY_ITEM_MAPPINGS.weight.field],
-          weightunit: item[INVENTORY_ITEM_MAPPINGS.weightunit.field],
-          salesprice: item[INVENTORY_ITEM_MAPPINGS.salesprice.field],
-          pricelevel1: INVENTORY_ITEM_MAPPINGS.pricelevel1.default,
-          pricelevel1price:
-            item[INVENTORY_ITEM_MAPPINGS.pricelevel1price.field],
-          pricelevel1currency:
-            INVENTORY_ITEM_MAPPINGS.pricelevel1currency.default,
-          pricelevel2: INVENTORY_ITEM_MAPPINGS.pricelevel2.default,
-          pricelevel2price:
-            item[INVENTORY_ITEM_MAPPINGS.pricelevel2price.field],
-          pricelevel2currency:
-            INVENTORY_ITEM_MAPPINGS.pricelevel2currency.default,
-          istaxable: INVENTORY_ITEM_MAPPINGS.istaxable.default,
-          taxschedule: INVENTORY_ITEM_MAPPINGS.taxschedule.default,
-        };
-        netSuiteImportItems.push(childImportItem);
-      });
-    });
+    const netSuiteImportItems = generateNetSuiteItems(matrixItems);
 
     console.log(
       'Generated',
@@ -146,14 +192,12 @@ async function main() {
     );
 
     if (DEBUG) {
-      // log all netsuite import items
-      for (const item of netSuiteImportItems) {
+      netSuiteImportItems.forEach((item) => {
         console.log('Import Item:', JSON.stringify(item, null, 2));
-      }
+      });
     }
 
-    // export file name
-    const outputFilename = 'NetSuite_Inventory_Items_Matrix.csv';
+    const outputFilename = 'NetSuite_Inventory_Items_Matrix';
 
     const headers = [
       { id: 'externalid', title: 'externalid' },
@@ -183,8 +227,8 @@ async function main() {
       { id: 'istaxable', title: 'istaxable' },
       { id: 'taxschedule', title: 'taxschedule' },
     ];
-    const csvWriter = initializeCSV(outputFilename, headers);
 
+    const csvWriter = initializeCSV(outputFilename, headers);
     await csvWriter.writeRecords(netSuiteImportItems);
     console.log('NetSuite inventory items CSV written to', outputFilename);
   } catch (err: any) {
