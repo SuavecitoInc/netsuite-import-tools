@@ -1,11 +1,11 @@
-import { initializeCSV, parseCSV, barcodeStringToNumber } from './lib/utils';
+import { initializeCSV, parseCSV, barcodeStringToNumber } from '../lib/utils';
 
-import { INVENTORY_ITEM_MAPPINGS } from './lib/configs/dear';
-import type { ShopifyItemRow } from './lib/types/shopify';
+import { INVENTORY_ITEM_MAPPINGS } from '../lib/configs/dear';
+import type { ShopifyItemRow } from '../lib/types/shopify';
 import type {
   DearAssemblyItemRow,
   DearInventoryItemRow,
-} from './lib/types/dear';
+} from '../lib/types/dear';
 
 // local script constants
 const DEBUG = false;
@@ -18,7 +18,7 @@ async function main() {
   try {
     console.log('Getting Shopify Items...');
     // load shopify retail items to filter inventory items
-    const shopifyExportFilePath = 'input/SHOPIFY-TN-ITEMS';
+    const shopifyExportFilePath = 'input/SHOPIFY-ITEMS';
     const shopifyItemRows = await parseCSV<ShopifyItemRow>(
       shopifyExportFilePath,
     );
@@ -145,7 +145,7 @@ async function main() {
     );
 
     // export file name
-    const outputFilename = 'NetSuite_Inventory_Items';
+    const outputFilename = 'Dear_to_NetSuite_Inventory_Items';
 
     const headers = [
       { id: 'externalid', title: 'externalid' },
