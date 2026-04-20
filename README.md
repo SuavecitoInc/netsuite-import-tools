@@ -323,6 +323,7 @@ netsuite-import-tools/
 │   ├── Assembly_BOM_List.csv
 │   ├── Inventory_List.csv
 │   ├── Inventory_Matrix_List.csv
+│   ├── Inventory_Availability.csv
 │   ├── NETSUITE-ITEMS-EXPORT.csv
 │   ├── SHOPIFY-ITEMS-EXPORT.csv
 │   └── SHOPIFY-ITEMS.csv
