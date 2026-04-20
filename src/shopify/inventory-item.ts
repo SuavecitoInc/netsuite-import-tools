@@ -8,6 +8,8 @@ import {
   getNameByHandle,
 } from './helpers';
 
+const INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
+
 // local script constants
 const DEBUG = false;
 const EXCLUDE_MATRIX_ITEMS = true;
@@ -16,7 +18,7 @@ async function main() {
   try {
     console.log('Getting Shopify Items...');
     // load shopify retail items to filter inventory items
-    const shopifyExportFilePath = 'input/SHOPIFY-ITEMS-EXPORT';
+    const shopifyExportFilePath = `input/${INPUT_FILENAME}`;
     const shopifyItemRows = await parseCSV<ShopifyItemRow>(
       shopifyExportFilePath,
     );

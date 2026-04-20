@@ -3,16 +3,17 @@ import {
   parseCSV,
   barcodeStringToNumber,
   handleToTitleCase,
-  addPrefixToSKU,
 } from '../lib/utils';
 
-import { INVENTORY_ITEM_MAPPINGS, MAPPINGS } from '../lib/configs/shopify';
+import { INVENTORY_ITEM_MAPPINGS } from '../lib/configs/shopify';
 import type { ShopifyItemRow } from '../lib/types/shopify';
 import {
   getHandlesWithMultipleVariants,
   getDescriptionByHandle,
   getNameByHandle,
 } from './helpers';
+
+const INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
 
 // local script constants
 const DEBUG = false;
@@ -194,7 +195,7 @@ function generateNetSuiteItems(
 
 async function main() {
   try {
-    const inventoryItemFilePath = 'input/SHOPIFY-ITEMS-EXPORT';
+    const inventoryItemFilePath = `input/${INPUT_FILENAME}`;
     const inventoryItemRows = await parseCSV<ShopifyItemRow>(
       inventoryItemFilePath,
     );
