@@ -5,9 +5,13 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint src/**/*.ts",
-    "inventory-item": "tsx src/inventory-item.ts",
-    "assembly-item": "tsx src/assembly-item.ts",
-    "inventory-item-matrix": "tsx src/inventory-item-matrix.ts",
+    "dear:inventory-item": "tsx src/dear/inventory-item.ts",
+    "dear:assembly-item": "tsx src/dear/assembly-item.ts",
+    "dear:inventory-item-matrix": "tsx src/dear/inventory-item-matrix.ts",
+    "dear:inventory-availability": "tsx src/dear/inventory-availability.ts",
+    "shopify:inventory-item": "tsx src/shopify/inventory-item.ts",
+    "shopify:inventory-item-matrix": "tsx src/shopify/inventory-item-matrix.ts",
+    "shopify:match-items": "tsx src/shopify/match-items.ts",
     "clean": "rm -f ./output/*"
   },
   "author": "j-Riv <jriv@suavecito.com>",

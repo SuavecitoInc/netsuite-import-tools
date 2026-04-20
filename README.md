@@ -1,20 +1,29 @@
 # NetSuite Import Tools
 
-> A collection of TypeScript tools to transform Dear/Cin7 and Shopify data into NetSuite-compatible CSV import files.
+> A collection of scripts to transform Dear/Cin7 and Shopify data into NetSuite-compatible CSV import files.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Required CSV Exports](#required-csv-exports)
-- [Usage](#usage)
+- [Dear / Cin7](#dear--cin7)
+  - [Required CSV Exports](#required-csv-exports)
+  - [Usage](#usage)
   - [1. Inventory Items](#1-inventory-items)
   - [2. Matrix Items](#2-matrix-items)
   - [3. Assembly Items](#3-assembly-items)
-- [Import Order](#import-order)
-- [Configuration](#configuration)
-- [Troubleshooting](#troubleshooting)
+  - [4. Inventory Availability](#4-inventory-availability)
+- [Shopify](#shopify)
+  - [Required CSV Exports](#required-csv-exports)
+  - [Usage](#usage)
+  - [1. Inventory Items](#1-inventory-items)
+  - [2. Matrix Items](#2-matrix-items)
+  - [3. Match Items](#3-match-items)
+- [NetSuite](#netsuite)
+  - [Import Order](#import-order)
+  - [Configuration](#configuration)
+  - [Troubleshooting](#troubleshooting)
 - [Project Structure](#project-structure)
 - [NetSuite Import Mappings](#netsuite-import-mappings)
 
@@ -56,11 +65,13 @@ npm install
 mkdir -p input output
 ```
 
-## Required CSV Exports
+## DEAR / CIN7
+
+### Required CSV Exports
 
 Before running any scripts, export the following CSV files and place them in the `input/` directory:
 
-### From Dear/Cin7
+#### From Dear/Cin7
 
 1. **Inventory List** → Save as `input/Inventory_List.csv`
    - Export all inventory items
@@ -75,105 +86,154 @@ Before running any scripts, export the following CSV files and place them in the
    - Include family and option fields
    - **Important**: Remove these items from `Inventory_List.csv`
 
-### From Shopify
+#### From Shopify
 
-4. **Product Export** → Save as `input/SHOPIFY-TN-ITEMS.csv`
+4. **Product Export** → Save as `input/SHOPIFY-ITEMS.csv`
    - Export all products from your Shopify store
-   - Include Variant SKU field for filtering
+   - Include Fields Handle, Title, Body (HTML), Vendor, Product Category, Type, and Variant SKU. Remove anything else
 
-### Expected Input Structure
+#### Expected Input Structure
 
 ```
 input/
 ├── Assembly_BOM_List.csv
 ├── Inventory_List.csv
 ├── Inventory_Matrix_List.csv
-└── SHOPIFY-TN-ITEMS.csv
+└── SHOPIFY-ITEMS.csv
 ```
 
-## Usage
+### Usage
 
-### 1. Inventory Items
+#### 1. Inventory Items
 
 Generates standard inventory items for NetSuite, excluding assemblies and matrix items.
 
 **Run:**
 
 ```bash
-npm run inventory-item
+npm run dear:inventory-item
 ```
 
-**Output:** `output/NetSuite_Inventory_Items.csv`
+**Output:** `output/Dear_to_NetSuite_Inventory_Items.csv`
 
-**Example Output:**
-
-```bash
-Getting Shopify Items...
-There are 654 Shopify item rows.
-Generating assembly item exclusion list...
-There are 1096 assembly BOM rows.
-There are 455 unique assembly item SKUs to exclude from inventory items.
-There are 1877 inventory item rows.
-Removing non-Shopify retail items from inventory items...
-Joining component SKUs to Shopify item SKUs...
-Excluding assembly items from inventory items...
-After excluding assembly items, there are 732 inventory items to import.
-Generated 732 NetSuite inventory items for import.
-✓ NetSuite inventory items CSV written to NetSuite_Inventory_Items.csv
-```
-
-### 2. Matrix Items
+#### 2. Matrix Items
 
 Generates parent and child matrix items for product families (e.g., apparel with sizes).
 
 **Run:**
 
 ```bash
-npm run inventory-item-matrix
+npm run dear:inventory-item-matrix
 ```
 
-**Output:** `output/NetSuite_Inventory_Items_Matrix.csv`
-
-**Example Output:**
-
-```bash
-Getting Matrix Items...
-There are 243 matrix inventory item rows.
-There are 42 families:
-Generated 285 NetSuite inventory items for import.
-✓ NetSuite inventory items CSV written to NetSuite_Inventory_Items_Matrix.csv
-```
+**Output:** `output/Dear_to_NetSuite_Inventory_Items_Matrix.csv`
 
 **Note:** This includes both parent items (1 per family) and child items (variants).
 
-### 3. Assembly Items
+#### 3. Assembly Items
 
 Generates assembly/bundle items with their component mappings.
 
 **Run:**
 
 ```bash
-npm run assembly-item
+npm run dear:assembly-item
 ```
 
-**Output:** `output/NetSuite_Assembly_Items.csv`
+**Output:** `output/Dear_to_NetSuite_Assembly_Items.csv`
 
-**Example Output:**
+#### 4. Inventory Availability
+
+Generates inventory availability adjustments for NetSuite based on Dear inventory data.
+
+**Run:**
 
 ```bash
-Getting Shopify Items...
-There are 654 Shopify item rows.
-Generating assembly item list...
-There are 1096 assembly BOM rows.
-There are 455 unique assembly item SKUs to process.
-Generated 455 assemblies with components.
-There are 1877 DEAR inventory item rows.
-Filtering assembly items to only Shopify Retail SKUs...
-Generated 376 NetSuite assembly items for import.
-✓ NetSuite assembly items CSV written to NetSuite_Assembly_Items.csv
+npm run dear:inventory-availability
 ```
 
-## Import Order
+**Output:** `output/Dear_to_NetSuite_Inventory_Adjustment.csv`
+
+## SHOPIFY
+
+### Required CSV Exports
+
+Before running any scripts, export the following CSV files and place them in the `input/` directory:
+
+#### From NetSuite
+
+1. **Product Export** → Save as `input/NETSUITE-ITEMS-EXPORT.csv`
+   - Export all Products from NetSuite
+   - Include fields: Internal ID, Type, Item SKU.
+
+#### From Shopify
+
+4. **Product Export** → Save as `input/SHOPIFY-ITEMS-EXPORT.csv`
+   - Export all products from your Shopify store
+   - Include all fields, this is just a standard Shopify product export
+
+#### Expected Input Structure
+
+```
+input/
+├── NETSUITE-ITEMS-EXPORT.csv
+└── SHOPIFY-ITEMS-EXPORT.csv
+```
+
+### Usage
+
+#### 1. Inventory Items
+
+Generates standard inventory items for NetSuite, excluding assemblies and matrix items.
+
+**Run:**
+
+```bash
+npm run shopify:inventory-item
+```
+
+**Output:** `output/Shopify_to_NetSuite_Inventory_Items.csv`
+
+#### 2. Matrix Items
+
+Generates parent and child matrix items for product families (e.g., apparel with sizes).
+
+**Run:**
+
+```bash
+npm run shopify:inventory-item-matrix
+```
+
+**Output:** `output/NetSuite_Inventory_Items_Matrix.csv`
+
+**Note:** This includes both parent items (1 per family) and child items (variants).
+
+#### 3. Match Items
+
+Generates a CSF of items, matching Shopify items to NetSuite items based on SKU, and mapping fields from Shopify to NetSuite. You must add the fields you want to map to the FIELD_MAPS.
+
+Config:
+
+```typescript
+const FIELD_MAPS = [
+  {
+    shopifyField: 'Body (HTML)', // Shopify field name from the export
+    netsuiteField: 'Description', // Desired NetSuite field name for the output CSV column
+  },
+];
+```
+
+**Run:**
+
+```bash
+npm run shopify:match-items
+```
+
+**Output:** `output/Shopify_to_NetSuite_Matched_Items.csv`
+
+## NETSUITE
+
+### Import Order
 
 ⚠️ **Critical**: Import files into NetSuite in this exact order:
 
@@ -188,9 +248,9 @@ Generated 376 NetSuite assembly items for import.
 
 **Why?** Assembly items reference inventory items as components. If components don't exist in NetSuite, the import will fail.
 
-## Configuration
+### Configuration
 
-### Debug Mode
+#### Debug Mode
 
 To enable detailed logging, edit the script file and set:
 
@@ -210,8 +270,9 @@ This will output:
 Field mappings are configured in:
 
 - `src/lib/configs/dear.ts` - Dear/Cin7 to NetSuite field mappings
+- `src/lib/configs/shopify.ts` - Shopify to NetSuite field mappings
 
-## Troubleshooting
+### Troubleshooting
 
 ### No Output File Generated
 
@@ -251,7 +312,7 @@ Field mappings are configured in:
 **Solution:**
 
 - Items may be filtered out if not in Shopify export
-- Check that `SHOPIFY-TN-ITEMS.csv` contains all expected SKUs
+- Check that `SHOPIFY-ITEMS.csv` contains all expected SKUs
 - Enable DEBUG mode to see which items are being filtered
 
 ## Project Structure
@@ -262,18 +323,26 @@ netsuite-import-tools/
 │   ├── Assembly_BOM_List.csv
 │   ├── Inventory_List.csv
 │   ├── Inventory_Matrix_List.csv
-│   └── SHOPIFY-TN-ITEMS.csv
+│   ├── NETSUITE-ITEMS-EXPORT.csv
+│   ├── SHOPIFY-ITEMS-EXPORT.csv
+│   └── SHOPIFY-ITEMS.csv
 ├── output/                         # Generated NetSuite CSVs
 │   ├── NetSuite_Assembly_Items.csv
 │   ├── NetSuite_Inventory_Items.csv
 │   └── NetSuite_Inventory_Items_Matrix.csv
 ├── src/
-│   ├── assembly-item.ts           # Assembly items script
-│   ├── inventory-item.ts          # Standard inventory script
-│   ├── inventory-item-matrix.ts   # Matrix items script
+│   ├── dear/
+│   │   ├── assembly-item.ts           # Assembly items script
+│   │   ├── inventory-item.ts          # Standard inventory script
+│   │   └── inventory-item-matrix.ts   # Matrix items script
+│   ├── shopify/
+│   │   ├── helpers.ts                 # Helper functions for Shopify integration
+│   │   ├── inventory-item.ts          # Standard inventory script
+│   │   └── inventory-item-matrix.ts   # Matrix items script
 │   └── lib/
 │       ├── configs/
 │       │   └── dear.ts            # Field mappings
+│       │   └── shopify.ts            # Field mappings
 │       ├── types/                 # TypeScript types
 │       └── utils.ts               # Shared utilities
 ├── package.json

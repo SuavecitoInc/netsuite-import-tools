@@ -3,10 +3,11 @@ import {
   parseCSV,
   barcodeStringToNumber,
   handleToTitleCase,
-} from './lib/utils';
+  addPrefixToSKU,
+} from '../lib/utils';
 
-import { INVENTORY_ITEM_MAPPINGS } from './lib/configs/dear';
-import type { DearInventoryItemRow } from './lib/types/dear';
+import { INVENTORY_ITEM_MAPPINGS } from '../lib/configs/dear';
+import type { DearInventoryItemRow } from '../lib/types/dear';
 
 // local script constants
 const DEBUG = false;
@@ -108,9 +109,14 @@ function createChildItem(
   item: DearInventoryItemRow,
   familySKU: string,
 ): NetSuiteMatrixItem {
+  const externalId = addPrefixToSKU(
+    item[INVENTORY_ITEM_MAPPINGS.externalid.field],
+    'TN-',
+  );
+  const name = addPrefixToSKU(item[INVENTORY_ITEM_MAPPINGS.name.field], 'TN-');
   return {
-    externalid: item[INVENTORY_ITEM_MAPPINGS.externalid.field],
-    name: item[INVENTORY_ITEM_MAPPINGS.name.field],
+    externalid: externalId,
+    name: name,
     displayname: item[INVENTORY_ITEM_MAPPINGS.displayname.field],
     barcode: barcodeStringToNumber(item[INVENTORY_ITEM_MAPPINGS.barcode.field]),
     size: item['ProductFamilyOption1Value'],
@@ -197,7 +203,7 @@ async function main() {
       });
     }
 
-    const outputFilename = 'NetSuite_Inventory_Items_Matrix';
+    const outputFilename = 'Dear_to_NetSuite_Inventory_Items_Matrix';
 
     const headers = [
       { id: 'externalid', title: 'externalid' },

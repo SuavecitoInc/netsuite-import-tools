@@ -105,3 +105,29 @@ export type DearInventoryItemRow = {
   HSCode: string;
   CountryOfOrigin: string;
 };
+
+export type DearInventoryAvailabilityRow = {
+  Category: string;
+  SKU: string;
+  ProductName: string;
+  Location: string;
+  Bin: string;
+  BatchSerialNumber: string;
+  ExpiryDate: string;
+  Discount: string;
+  StockValue: number;
+  OnHand: number;
+  VolumeOnHand: number;
+  Available: number;
+  OnOrder: number;
+  InTransit: number;
+  Allocated: number;
+  Status: string;
+  Unit: string;
+  Family: string;
+  StockLocator: string;
+  Brand: string;
+  PriceTier1: number;
+  PriceTier2: number;
+  PriceTier3: number;
+};

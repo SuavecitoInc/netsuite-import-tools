@@ -1,10 +1,10 @@
-import { initializeCSV, parseCSV, barcodeStringToNumber } from './lib/utils';
-import { ASSEMBLY_ITEM_MAPPINGS } from './lib/configs/dear';
-import type { ShopifyItemRow } from './lib/types/shopify';
+import { initializeCSV, parseCSV, barcodeStringToNumber } from '../lib/utils';
+import { ASSEMBLY_ITEM_MAPPINGS } from '../lib/configs/dear';
+import type { ShopifyItemRow } from '../lib/types/shopify';
 import type {
   DearAssemblyItemRow,
   DearInventoryItemRow,
-} from './lib/types/dear';
+} from '../lib/types/dear';
 
 // Types
 interface AssemblyComponent {
@@ -160,7 +160,7 @@ function getMaxComponentCount(
 async function main() {
   try {
     console.log('Getting Shopify Items...');
-    const shopifyExportFilePath = 'input/SHOPIFY-TN-ITEMS';
+    const shopifyExportFilePath = 'input/SHOPIFY-ITEMS';
     const shopifyItemRows = await parseCSV<ShopifyItemRow>(
       shopifyExportFilePath,
     );
@@ -240,7 +240,7 @@ async function main() {
       'NetSuite assembly items for import.',
     );
 
-    const outputFilename = 'NetSuite_Assembly_Items';
+    const outputFilename = 'Dear_to_NetSuite_Assembly_Items';
     const maxComponents = getMaxComponentCount(assemblies);
 
     console.log(`Max components in any assembly: ${maxComponents}`);
