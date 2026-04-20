@@ -1,4 +1,4 @@
-import { initializeCSV, parseCSV } from '../lib/utils';
+import { initializeCSV, parseCSV, createProgressLogger } from '../lib/utils';
 import type { ShopifyItemRow } from '../lib/types/shopify';
 import { getFieldValueByHandle } from './helpers';
 import { SHOPIFY_FIELDS } from '../lib/configs/shopify';
@@ -21,20 +21,56 @@ type NetSuiteItemRow = {
 
 // local script constants
 const DEBUG = false;
+const DEFAULT_SHOPIFY_INPUT_FILENAME = 'SHOPIFY-ITEMS-EXPORT';
+const DEFAULT_NETSUITE_INPUT_FILENAME = 'NETSUITE-ITEMS-EXPORT';
+
+const formatDurationMs = (durationMs: number): string =>
+  `${(durationMs / 1000).toFixed(2)}s`;
 
 async function main() {
   try {
+    const runStartedAt = Date.now();
+    const shopifyFilenameArg = process.argv[2]?.trim();
+    const netSuiteFilenameArg = process.argv[3]?.trim();
+
+    const shopifyInputFilename =
+      shopifyFilenameArg && shopifyFilenameArg !== ''
+        ? shopifyFilenameArg.replace(/\.csv$/i, '')
+        : DEFAULT_SHOPIFY_INPUT_FILENAME;
+    const netSuiteInputFilename =
+      netSuiteFilenameArg && netSuiteFilenameArg !== ''
+        ? netSuiteFilenameArg.replace(/\.csv$/i, '')
+        : DEFAULT_NETSUITE_INPUT_FILENAME;
+
     console.log('Getting Shopify Items...');
+    console.log('Using Shopify input file:', `${shopifyInputFilename}.csv`);
+
     // load shopify retail items to filter inventory items
-    const shopifyExportFilePath = 'input/SHOPIFY-ITEMS-EXPORT';
+    const shopifyExportFilePath = `input/${shopifyInputFilename}`;
     const shopifyItemRows = await parseCSV<ShopifyItemRow>(
       shopifyExportFilePath,
+      {
+        showProgress: true,
+        progressLabel: 'Shopify CSV Load',
+        progressIntervalPercent: 10,
+      },
     );
+
+    const shopifyLoadedAt = Date.now();
+
+    console.log('Using NetSuite input file:', `${netSuiteInputFilename}.csv`);
+
     // load netsuite items to get internal id mappings
-    const netSuiteItemsFilePath = 'input/NETSUITE-ITEMS-EXPORT';
+    const netSuiteItemsFilePath = `input/${netSuiteInputFilename}`;
     const netSuiteItemRows = await parseCSV<NetSuiteItemRow>(
       netSuiteItemsFilePath,
+      {
+        showProgress: true,
+        progressLabel: 'NetSuite CSV Load',
+        progressIntervalPercent: 10,
+      },
     );
+    const netSuiteLoadedAt = Date.now();
 
     console.log('Creating NetSuite item lookup by SKU...');
 
@@ -43,6 +79,7 @@ async function main() {
     netSuiteItemRows.forEach((item) => {
       netSuiteItemsBySKU[item['Item SKU']] = item;
     });
+    const indexingDoneAt = Date.now();
 
     console.log(
       'Generated NetSuite item lookup by SKU for',
@@ -52,12 +89,21 @@ async function main() {
 
     console.log('Generating NetSuite inventory items for import...');
 
+    const logMatchProgress = createProgressLogger(
+      shopifyItemRows.length,
+      'Shopify Match Conversion',
+      500,
+    );
+
     // create object for NetSuite import
-    const netSuiteImportItems = shopifyItemRows.map((item) => {
+    const netSuiteImportItems = shopifyItemRows.map((item, index) => {
       const netsuiteData = netSuiteItemsBySKU[item['Variant SKU']];
+      logMatchProgress(index + 1);
+
       if (!netsuiteData) {
         return null;
       }
+
       const fields = FIELD_MAPS.map((el) => {
         DEBUG &&
           console.log('Mapping field', el.shopifyField, 'to', el.netsuiteField);
@@ -81,18 +127,22 @@ async function main() {
       });
       DEBUG && console.log('Mapped fields:', fields);
 
+      const mappedFields = Object.assign({}, ...fields);
+
       return {
         internalid: netsuiteData['Internal ID'],
         type: netsuiteData['Type'],
         sku: netsuiteData['Item SKU'],
-        ...fields[0], // get the first (and only) field mapping for this item
+        ...mappedFields,
       };
     });
+    const transformDoneAt = Date.now();
 
     // filter out null values (i.e. shopify items that do not have a matching netsuite item by sku)
     const filteredNetSuiteImportItems = netSuiteImportItems.filter(
       (item): item is NonNullable<typeof item> => item !== null,
     );
+    const filteringDoneAt = Date.now();
 
     console.log(
       'Generated',
@@ -116,8 +166,34 @@ async function main() {
     ];
     const csvWriter = initializeCSV(outputFilename, headers);
 
+    const writeStartedAt = Date.now();
     await csvWriter.writeRecords(filteredNetSuiteImportItems);
+    const completedAt = Date.now();
     console.log('NetSuite inventory items CSV written to', outputFilename);
+
+    console.log('Timing Summary:');
+    console.log(
+      '- Shopify CSV load:',
+      formatDurationMs(shopifyLoadedAt - runStartedAt),
+    );
+    console.log(
+      '- NetSuite CSV load:',
+      formatDurationMs(netSuiteLoadedAt - shopifyLoadedAt),
+    );
+    console.log(
+      '- NetSuite SKU index:',
+      formatDurationMs(indexingDoneAt - netSuiteLoadedAt),
+    );
+    console.log(
+      '- Transform:',
+      formatDurationMs(transformDoneAt - indexingDoneAt),
+    );
+    console.log(
+      '- Filter matched rows:',
+      formatDurationMs(filteringDoneAt - transformDoneAt),
+    );
+    console.log('- CSV write:', formatDurationMs(completedAt - writeStartedAt));
+    console.log('- Total:', formatDurationMs(completedAt - runStartedAt));
   } catch (err: any) {
     console.error('Error:', err.message);
   }

@@ -1,4 +1,9 @@
-import { initializeCSV, parseCSV, barcodeStringToNumber } from '../lib/utils';
+import {
+  initializeCSV,
+  parseCSV,
+  barcodeStringToNumber,
+  createProgressLogger,
+} from '../lib/utils';
 
 import { INVENTORY_ITEM_MAPPINGS } from '../lib/configs/shopify';
 import type { ShopifyItemRow } from '../lib/types/shopify';
@@ -8,24 +13,47 @@ import {
   getNameByHandle,
 } from './helpers';
 
-const INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
+const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
 
 // local script constants
 const DEBUG = false;
 const EXCLUDE_MATRIX_ITEMS = true;
 
+const formatDurationMs = (durationMs: number): string =>
+  `${(durationMs / 1000).toFixed(2)}s`;
+
 async function main() {
   try {
+    const runStartedAt = Date.now();
+
+    const inputFilenameArg = process.argv[2]?.trim();
+    const inputFilename =
+      inputFilenameArg && inputFilenameArg !== ''
+        ? inputFilenameArg.replace(/\.csv$/i, '')
+        : DEFAULT_INPUT_FILENAME;
+
     console.log('Getting Shopify Items...');
+    console.log('Using input file:', `${inputFilename}.csv`);
+
     // load shopify retail items to filter inventory items
-    const shopifyExportFilePath = `input/${INPUT_FILENAME}`;
+    const shopifyExportFilePath = `input/${inputFilename}`;
     const shopifyItemRows = await parseCSV<ShopifyItemRow>(
       shopifyExportFilePath,
+      {
+        showProgress: true,
+        progressLabel: 'Shopify CSV Load',
+        progressIntervalPercent: 10,
+      },
     );
+    const csvLoadedAt = Date.now();
+
+    console.log('Building variant handle index...');
 
     // get items that have more than 1 variant (i.e. multiple rows with the same handle) to exclude them from the inventory item import since they will be imported as matrix items instead
     const itemHandlesWithMultipleVariants =
       getHandlesWithMultipleVariants(shopifyItemRows);
+    const multiVariantHandleSet = new Set(itemHandlesWithMultipleVariants);
+    const indexingDoneAt = Date.now();
 
     console.log(
       'There are',
@@ -38,9 +66,9 @@ async function main() {
     const filteredShopifyItemRows = shopifyItemRows.filter(
       (item) =>
         item['Variant SKU'] !== '' &&
-        (!EXCLUDE_MATRIX_ITEMS ||
-          !itemHandlesWithMultipleVariants.includes(item.Handle)),
+        (!EXCLUDE_MATRIX_ITEMS || !multiVariantHandleSet.has(item.Handle)),
     );
+    const filteringDoneAt = Date.now();
 
     console.log(
       'There are',
@@ -48,8 +76,14 @@ async function main() {
       'Shopify item rows.',
     );
 
+    const logConversionProgress = createProgressLogger(
+      filteredShopifyItemRows.length,
+      'Shopify Inventory Conversion',
+      500,
+    );
+
     // create object for NetSuite import
-    const netSuiteImportItems = filteredShopifyItemRows.map((item) => {
+    const netSuiteImportItems = filteredShopifyItemRows.map((item, index) => {
       // get description by handle if it does not already exist
       const itemDescription = item[INVENTORY_ITEM_MAPPINGS.description.field];
       let descriptionHtml = itemDescription;
@@ -81,6 +115,8 @@ async function main() {
           name = INVENTORY_ITEM_MAPPINGS.displayname.field;
         }
       }
+
+      logConversionProgress(index + 1);
 
       return {
         externalid: item[INVENTORY_ITEM_MAPPINGS.externalid.field],
@@ -116,6 +152,7 @@ async function main() {
         taxschedule: INVENTORY_ITEM_MAPPINGS.taxschedule.default,
       };
     });
+    const transformDoneAt = Date.now();
 
     console.log(
       'Generated',
@@ -154,8 +191,27 @@ async function main() {
     ];
     const csvWriter = initializeCSV(outputFilename, headers);
 
+    const writeStartedAt = Date.now();
     await csvWriter.writeRecords(netSuiteImportItems);
+    const completedAt = Date.now();
     console.log('NetSuite inventory items CSV written to', outputFilename);
+
+    console.log('Timing Summary:');
+    console.log('- CSV load:', formatDurationMs(csvLoadedAt - runStartedAt));
+    console.log(
+      '- Variant index:',
+      formatDurationMs(indexingDoneAt - csvLoadedAt),
+    );
+    console.log(
+      '- Filtering:',
+      formatDurationMs(filteringDoneAt - indexingDoneAt),
+    );
+    console.log(
+      '- Transform:',
+      formatDurationMs(transformDoneAt - filteringDoneAt),
+    );
+    console.log('- CSV write:', formatDurationMs(completedAt - writeStartedAt));
+    console.log('- Total:', formatDurationMs(completedAt - runStartedAt));
   } catch (err: any) {
     console.error('Error:', err.message);
   }

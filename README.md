@@ -189,7 +189,7 @@ Generates standard inventory items for NetSuite, excluding assemblies and matrix
 **Run:**
 
 ```bash
-npm run shopify:inventory-item
+npm run shopify:inventory-item -- SHOPIFY-ITEMS-EXPORT.csv
 ```
 
 **Output:** `output/Shopify_to_NetSuite_Inventory_Items.csv`
@@ -201,7 +201,7 @@ Generates parent and child matrix items for product families (e.g., apparel with
 **Run:**
 
 ```bash
-npm run shopify:inventory-item-matrix
+npm run shopify:inventory-item-matrix -- SHOPIFY-ITEMS-EXPORT.csv
 ```
 
 **Output:** `output/NetSuite_Inventory_Items_Matrix.csv`
@@ -226,7 +226,7 @@ const FIELD_MAPS = [
 **Run:**
 
 ```bash
-npm run shopify:match-items
+npm run shopify:match-items -- SHOPIFY-ITEMS-EXPORT NETSUITE-ITEMS-EXPORT
 ```
 
 **Output:** `output/Shopify_to_NetSuite_Matched_Items.csv`

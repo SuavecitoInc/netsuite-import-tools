@@ -2,17 +2,41 @@ import type { ShopifyItemRow } from '../lib/types/shopify';
 
 // get items that have more than 1 variant (i.e. multiple rows with the same handle) to exclude them from the inventory item import since they will be imported as matrix items instead
 
+const rowsByHandleCache = new WeakMap<
+  ShopifyItemRow[],
+  Map<string, ShopifyItemRow[]>
+>();
+
+const getRowsByHandle = (
+  rows: ShopifyItemRow[],
+): Map<string, ShopifyItemRow[]> => {
+  const cached = rowsByHandleCache.get(rows);
+  if (cached) {
+    return cached;
+  }
+
+  const handleMap = new Map<string, ShopifyItemRow[]>();
+  rows.forEach((item) => {
+    const existing = handleMap.get(item.Handle);
+    if (existing) {
+      existing.push(item);
+      return;
+    }
+    handleMap.set(item.Handle, [item]);
+  });
+
+  rowsByHandleCache.set(rows, handleMap);
+  return handleMap;
+};
+
 export const getHandlesWithMultipleVariants = (
   rows: ShopifyItemRow[],
 ): string[] => {
-  return rows.reduce((acc: string[], item) => {
-    if (rows.filter((i) => i.Handle === item.Handle).length > 1) {
-      if (!acc.includes(item.Handle)) {
-        acc.push(item.Handle);
-      }
-    }
-    return acc;
-  }, []);
+  const rowsByHandle = getRowsByHandle(rows);
+
+  return Array.from(rowsByHandle.entries())
+    .filter(([, groupedRows]) => groupedRows.length > 1)
+    .map(([handle]) => handle);
 };
 
 export const getDescriptionByHandle = (
@@ -21,7 +45,7 @@ export const getDescriptionByHandle = (
   DEBUG: boolean = false,
 ): string | false => {
   DEBUG && console.log('Getting description for handle', handle);
-  const matchingItems = rows.filter((item) => item.Handle === handle);
+  const matchingItems = getRowsByHandle(rows).get(handle) ?? [];
   DEBUG &&
     console.log(
       'Found',
@@ -46,7 +70,7 @@ export const getDescriptionByHandle = (
   });
 
   if (emptyDescription) {
-    console.warn('No description found for handle', handle);
+    DEBUG && console.warn('No description found for handle', handle);
     return false;
   }
 
@@ -60,7 +84,7 @@ export const getNameByHandle = (
   DEBUG: boolean = false,
 ): string | false => {
   DEBUG && console.log('Getting name for handle', handle);
-  const matchingItems = rows.filter((item) => item.Handle === handle);
+  const matchingItems = getRowsByHandle(rows).get(handle) ?? [];
   DEBUG &&
     console.log(
       'Found',
@@ -79,7 +103,7 @@ export const getNameByHandle = (
   });
 
   if (emptyName) {
-    console.warn('No name found for handle', handle);
+    DEBUG && console.warn('No name found for handle', handle);
     return false;
   }
 
@@ -93,7 +117,7 @@ export const getFieldValueByHandle = (
   DEBUG: boolean = false,
 ): string | false => {
   DEBUG && console.log('Getting field', field, 'for handle', handle);
-  const matchingItems = rows.filter((item) => item.Handle === handle);
+  const matchingItems = getRowsByHandle(rows).get(handle) ?? [];
   DEBUG &&
     console.log(
       'Found',

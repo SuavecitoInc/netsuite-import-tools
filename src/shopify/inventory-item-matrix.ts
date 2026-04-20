@@ -3,6 +3,7 @@ import {
   parseCSV,
   barcodeStringToNumber,
   handleToTitleCase,
+  createProgressLogger,
 } from '../lib/utils';
 
 import { INVENTORY_ITEM_MAPPINGS } from '../lib/configs/shopify';
@@ -13,12 +14,15 @@ import {
   getNameByHandle,
 } from './helpers';
 
-const INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
+const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
 
 // local script constants
 const DEBUG = false;
 const PRODUCT_CODE = 'Variant SKU';
 const FAMILY_SKU = 'Handle';
+
+const formatDurationMs = (durationMs: number): string =>
+  `${(durationMs / 1000).toFixed(2)}s`;
 
 // Types
 interface NetSuiteMatrixItem {
@@ -177,37 +181,62 @@ function createChildItem(
 
 function generateNetSuiteItems(
   matrixItems: Record<string, ShopifyItemRow[]>,
+  onFamilyProcessed?: (processedCount: number) => void,
 ): NetSuiteMatrixItem[] {
-  return Object.entries(matrixItems).flatMap(([familySKU, childItems]) => {
-    if (!childItems.length) {
-      console.warn(`Family ${familySKU} has no items, skipping`);
-      return [];
-    }
+  return Object.entries(matrixItems).flatMap(
+    ([familySKU, childItems], familyIndex) => {
+      onFamilyProcessed?.(familyIndex + 1);
 
-    const parentItem = createParentItem(familySKU, childItems[0]);
-    const childImportItems = childItems.map((item) =>
-      createChildItem(childItems, item, familySKU),
-    );
+      if (!childItems.length) {
+        console.warn(`Family ${familySKU} has no items, skipping`);
+        return [];
+      }
 
-    return [parentItem, ...childImportItems];
-  });
+      const parentItem = createParentItem(familySKU, childItems[0]);
+      const childImportItems = childItems.map((item) =>
+        createChildItem(childItems, item, familySKU),
+      );
+
+      return [parentItem, ...childImportItems];
+    },
+  );
 }
 
 async function main() {
   try {
-    const inventoryItemFilePath = `input/${INPUT_FILENAME}`;
+    const runStartedAt = Date.now();
+
+    const inputFilenameArg = process.argv[2]?.trim();
+    const inputFilename =
+      inputFilenameArg && inputFilenameArg !== ''
+        ? inputFilenameArg.replace(/\.csv$/i, '')
+        : DEFAULT_INPUT_FILENAME;
+
+    console.log('Using input file:', `${inputFilename}.csv`);
+
+    const inventoryItemFilePath = `input/${inputFilename}`;
     const inventoryItemRows = await parseCSV<ShopifyItemRow>(
       inventoryItemFilePath,
+      {
+        showProgress: true,
+        progressLabel: 'Shopify CSV Load',
+        progressIntervalPercent: 10,
+      },
     );
+    const csvLoadedAt = Date.now();
     console.log('Getting Matrix Items...');
+    console.log('Building variant handle index...');
 
     // get items that have more than 1 variant (i.e. multiple rows with the same handle) to exclude items with only 1 variant since those should be imported as inventory items instead of matrix items
     const itemHandlesWithMultipleVariants =
       getHandlesWithMultipleVariants(inventoryItemRows);
+    const multiVariantHandleSet = new Set(itemHandlesWithMultipleVariants);
+    const indexingDoneAt = Date.now();
 
     const filteredInventoryItemRows = inventoryItemRows.filter((item) =>
-      itemHandlesWithMultipleVariants.includes(item.Handle),
+      multiVariantHandleSet.has(item.Handle),
     );
+    const filteringDoneAt = Date.now();
 
     console.log(
       'There are',
@@ -217,8 +246,15 @@ async function main() {
 
     const matrixItems = groupByFamily(filteredInventoryItemRows);
     const familyCount = Object.keys(matrixItems).length;
+    const groupingDoneAt = Date.now();
 
     console.log('There are', familyCount, 'families');
+
+    const logFamilyProgress = createProgressLogger(
+      familyCount,
+      'Shopify Matrix Family Conversion',
+      100,
+    );
 
     if (DEBUG) {
       Object.entries(matrixItems).forEach(([family, items]) => {
@@ -235,7 +271,11 @@ async function main() {
       });
     }
 
-    const netSuiteImportItems = generateNetSuiteItems(matrixItems);
+    const netSuiteImportItems = generateNetSuiteItems(
+      matrixItems,
+      logFamilyProgress,
+    );
+    const transformDoneAt = Date.now();
 
     console.log(
       'Generated',
@@ -282,8 +322,31 @@ async function main() {
     ];
 
     const csvWriter = initializeCSV(outputFilename, headers);
+    const writeStartedAt = Date.now();
     await csvWriter.writeRecords(netSuiteImportItems);
+    const completedAt = Date.now();
     console.log('NetSuite inventory items CSV written to', outputFilename);
+
+    console.log('Timing Summary:');
+    console.log('- CSV load:', formatDurationMs(csvLoadedAt - runStartedAt));
+    console.log(
+      '- Variant index:',
+      formatDurationMs(indexingDoneAt - csvLoadedAt),
+    );
+    console.log(
+      '- Filtering:',
+      formatDurationMs(filteringDoneAt - indexingDoneAt),
+    );
+    console.log(
+      '- Group by family:',
+      formatDurationMs(groupingDoneAt - filteringDoneAt),
+    );
+    console.log(
+      '- Transform:',
+      formatDurationMs(transformDoneAt - groupingDoneAt),
+    );
+    console.log('- CSV write:', formatDurationMs(completedAt - writeStartedAt));
+    console.log('- Total:', formatDurationMs(completedAt - runStartedAt));
   } catch (err: any) {
     console.error('Error:', err.message);
   }

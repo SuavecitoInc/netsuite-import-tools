@@ -22,7 +22,18 @@ const OUTPUT_DIR = path.join(__dirname, '../../output');
  * const items = await parseCSV<InventoryItem>('input/Inventory_List');
  * ```
  */
-export const parseCSV = async <Row>(filePath: string): Promise<Row[]> => {
+type ParseCSVOptions = {
+  showProgress?: boolean;
+  progressLabel?: string;
+  progressIntervalPercent?: number;
+};
+
+const bytesToMB = (bytes: number): string => (bytes / (1024 * 1024)).toFixed(1);
+
+export const parseCSV = async <Row>(
+  filePath: string,
+  options?: ParseCSVOptions,
+): Promise<Row[]> => {
   const fullPath = path.join(__dirname, `../../${filePath}.csv`);
 
   // Validate file exists
@@ -31,7 +42,51 @@ export const parseCSV = async <Row>(filePath: string): Promise<Row[]> => {
   }
 
   try {
-    const jsonArray = await csv().fromFile(fullPath);
+    const shouldShowProgress = options?.showProgress === true;
+
+    if (!shouldShowProgress) {
+      const jsonArray = await csv().fromFile(fullPath);
+      return jsonArray as Row[];
+    }
+
+    const stats = fs.statSync(fullPath);
+    const totalBytes = stats.size;
+    const label = options?.progressLabel ?? 'CSV Parse';
+    const intervalPercent = Math.min(
+      Math.max(options?.progressIntervalPercent ?? 10, 1),
+      50,
+    );
+    let nextPercentToLog = intervalPercent;
+    let bytesRead = 0;
+    const startedAt = Date.now();
+
+    console.log(
+      `[${label}] Reading ${bytesToMB(totalBytes)} MB from ${path.basename(fullPath)}...`,
+    );
+
+    const readStream = fs.createReadStream(fullPath);
+    readStream.on('data', (chunk: Buffer) => {
+      bytesRead += chunk.length;
+
+      if (totalBytes <= 0) {
+        return;
+      }
+
+      const percentRead = (bytesRead / totalBytes) * 100;
+      if (percentRead >= nextPercentToLog && nextPercentToLog < 100) {
+        const elapsedSeconds = ((Date.now() - startedAt) / 1000).toFixed(1);
+        console.log(
+          `[${label}] ${nextPercentToLog.toFixed(0)}% (${bytesToMB(bytesRead)}/${bytesToMB(totalBytes)} MB) - ${elapsedSeconds}s`,
+        );
+        nextPercentToLog += intervalPercent;
+      }
+    });
+
+    const jsonArray = await csv().fromStream(readStream);
+    const elapsedSeconds = ((Date.now() - startedAt) / 1000).toFixed(1);
+    console.log(
+      `[${label}] 100% complete (${jsonArray.length} rows) - ${elapsedSeconds}s`,
+    );
     return jsonArray as Row[];
   } catch (error) {
     throw new Error(`Failed to parse CSV file ${fullPath}: ${error.message}`);
@@ -257,4 +312,39 @@ export const archiveOutputFile = (fileName: string): void => {
     fs.copyFileSync(filePath, archivePath);
     console.log(`Archived existing file to: ${archivePath}`);
   }
+};
+
+/**
+ * Creates a progress logger callback that prints periodic updates.
+ */
+export const createProgressLogger = (
+  total: number,
+  label: string,
+  interval: number = 500,
+): ((current: number) => void) => {
+  const safeTotal = Math.max(total, 0);
+  const safeInterval = Math.max(interval, 1);
+  const startedAt = Date.now();
+
+  return (current: number) => {
+    if (safeTotal === 0) {
+      return;
+    }
+
+    const isIntervalHit = current % safeInterval === 0;
+    const isDone = current >= safeTotal;
+
+    if (!isIntervalHit && !isDone) {
+      return;
+    }
+
+    const percent = ((Math.min(current, safeTotal) / safeTotal) * 100).toFixed(
+      1,
+    );
+    const elapsedSeconds = ((Date.now() - startedAt) / 1000).toFixed(1);
+
+    console.log(
+      `[${label}] ${Math.min(current, safeTotal)}/${safeTotal} (${percent}%) - ${elapsedSeconds}s elapsed`,
+    );
+  };
 };
