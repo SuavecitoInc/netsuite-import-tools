@@ -23,6 +23,7 @@ type NetSuiteItemRow = {
 const DEBUG = false;
 const DEFAULT_SHOPIFY_INPUT_FILENAME = 'SHOPIFY-ITEMS-EXPORT';
 const DEFAULT_NETSUITE_INPUT_FILENAME = 'NETSUITE-ITEMS-EXPORT';
+const MAX_ITEMS_PER_FILE = 20000;
 
 const sanitizeTypeForFilename = (type: string): string => {
   const normalized = type
@@ -187,17 +188,33 @@ async function main() {
     console.log('Writing', typeEntries.length, 'type-specific output files...');
 
     for (const [itemType, rows] of typeEntries) {
-      const outputFilename = `Shopify_to_NetSuite_Match_Items_${sanitizeTypeForFilename(itemType)}`;
-      const csvWriter = initializeCSV(outputFilename, headers);
-      await csvWriter.writeRecords(rows);
-      console.log(
-        'Wrote',
-        rows.length,
-        'rows for type',
-        `'${itemType}'`,
-        'to',
-        `${outputFilename}.csv`,
+      const baseFilename = `Shopify_to_NetSuite_Match_Items_${sanitizeTypeForFilename(itemType)}`;
+      const totalChunks = Math.max(
+        1,
+        Math.ceil(rows.length / MAX_ITEMS_PER_FILE),
       );
+
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+        const chunkStart = chunkIndex * MAX_ITEMS_PER_FILE;
+        const chunkRows = rows.slice(
+          chunkStart,
+          chunkStart + MAX_ITEMS_PER_FILE,
+        );
+        const outputFilename =
+          totalChunks === 1
+            ? baseFilename
+            : `${baseFilename}_part_${String(chunkIndex + 1).padStart(2, '0')}`;
+        const csvWriter = initializeCSV(outputFilename, headers);
+        await csvWriter.writeRecords(chunkRows);
+        console.log(
+          'Wrote',
+          chunkRows.length,
+          'rows for type',
+          `'${itemType}'`,
+          'to',
+          `${outputFilename}.csv`,
+        );
+      }
     }
 
     const completedAt = Date.now();
