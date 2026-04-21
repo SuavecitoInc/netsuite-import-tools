@@ -22,6 +22,7 @@ const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPOR
 const DEBUG = false;
 const EXCLUDE_MATRIX_ITEMS = false;
 const CONVERT_WEIGHT_TO_POUNDS = true;
+const MAX_ITEMS_PER_FILE = 20000;
 
 async function main() {
   try {
@@ -218,12 +219,39 @@ async function main() {
       { id: 'istaxable', title: 'istaxable' },
       { id: 'taxschedule', title: 'taxschedule' },
     ];
-    const csvWriter = initializeCSV(outputFilename, headers);
 
     const writeStartedAt = Date.now();
-    await csvWriter.writeRecords(netSuiteImportItems);
+    const totalChunks = Math.max(
+      1,
+      Math.ceil(netSuiteImportItems.length / MAX_ITEMS_PER_FILE),
+    );
+
+    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+      const chunkStart = chunkIndex * MAX_ITEMS_PER_FILE;
+      const chunkEnd = chunkStart + MAX_ITEMS_PER_FILE;
+      const chunkRows = netSuiteImportItems.slice(chunkStart, chunkEnd);
+      const chunkOutputFilename =
+        totalChunks === 1
+          ? outputFilename
+          : `${outputFilename}_part_${String(chunkIndex + 1).padStart(2, '0')}`;
+      const csvWriter = initializeCSV(chunkOutputFilename, headers);
+
+      await csvWriter.writeRecords(chunkRows);
+      console.log(
+        'NetSuite inventory items CSV written to',
+        `${chunkOutputFilename}.csv`,
+        `(${chunkRows.length} rows)`,
+      );
+    }
     const completedAt = Date.now();
-    console.log('NetSuite inventory items CSV written to', outputFilename);
+
+    console.log(
+      'Generated',
+      totalChunks,
+      'file(s) with up to',
+      MAX_ITEMS_PER_FILE,
+      'items each.',
+    );
 
     console.log('Timing Summary:');
     console.log('- CSV load:', formatDurationMs(csvLoadedAt - runStartedAt));

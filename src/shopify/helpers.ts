@@ -144,7 +144,7 @@ export const getFieldValueByHandle = (
   });
 
   if (emptyValue) {
-    console.warn('No value found for handle', handle);
+    DEBUG && console.warn('No value found for handle', handle);
     return false;
   }
 
