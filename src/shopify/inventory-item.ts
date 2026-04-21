@@ -11,6 +11,7 @@ import {
   getHandlesWithMultipleVariants,
   getDescriptionByHandle,
   getNameByHandle,
+  getFieldValueByHandle,
   gramsToPounds,
   formatDurationMs,
 } from './helpers';
@@ -121,6 +122,18 @@ async function main() {
         }
       }
 
+      // get manufacturer by handle if it does not already exist
+      const manufacturer =
+        INVENTORY_ITEM_MAPPINGS.manufacturer.field &&
+        item[INVENTORY_ITEM_MAPPINGS.manufacturer.field]
+          ? item[INVENTORY_ITEM_MAPPINGS.manufacturer.field]
+          : getFieldValueByHandle(
+              item.Handle,
+              INVENTORY_ITEM_MAPPINGS.manufacturer.field,
+              filteredShopifyItemRows,
+              DEBUG,
+            );
+
       logConversionProgress(index + 1);
 
       // weight
@@ -145,8 +158,8 @@ async function main() {
         costingmethod: INVENTORY_ITEM_MAPPINGS.costingmethod.default,
         usebins: INVENTORY_ITEM_MAPPINGS.usebins.default,
         atpmethod: INVENTORY_ITEM_MAPPINGS.atpmethod.default,
-        manufacturer: INVENTORY_ITEM_MAPPINGS.manufacturer.field
-          ? item[INVENTORY_ITEM_MAPPINGS.manufacturer.field]
+        manufacturer: manufacturer
+          ? manufacturer
           : INVENTORY_ITEM_MAPPINGS.manufacturer.default,
         countryofmanufacture:
           INVENTORY_ITEM_MAPPINGS.countryofmanufacture.default,

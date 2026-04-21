@@ -14,6 +14,7 @@ import {
   getNameByHandle,
   gramsToPounds,
   formatDurationMs,
+  getFieldValueByHandle,
 } from './helpers';
 
 const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
@@ -157,6 +158,18 @@ function createChildItem(
     }
   }
 
+  // get manufacturer by handle if it does not already exist
+  const manufacturer =
+    INVENTORY_ITEM_MAPPINGS.manufacturer.field &&
+    item[INVENTORY_ITEM_MAPPINGS.manufacturer.field]
+      ? item[INVENTORY_ITEM_MAPPINGS.manufacturer.field]
+      : getFieldValueByHandle(
+          item.Handle,
+          INVENTORY_ITEM_MAPPINGS.manufacturer.field,
+          rows,
+          DEBUG,
+        );
+
   // weight
   const itemWeight = item[INVENTORY_ITEM_MAPPINGS.weight.field];
   const weightInPounds = itemWeight ? gramsToPounds(Number(itemWeight)) : '';
@@ -185,6 +198,10 @@ function createChildItem(
     // pricelevel2: INVENTORY_ITEM_MAPPINGS.pricelevel2.default,
     // pricelevel2price: item[INVENTORY_ITEM_MAPPINGS.pricelevel2price.field],
     // pricelevel2currency: INVENTORY_ITEM_MAPPINGS.pricelevel2currency.default,
+    manufacturer: manufacturer
+      ? manufacturer
+      : INVENTORY_ITEM_MAPPINGS.manufacturer.default,
+    countryofmanufacture: INVENTORY_ITEM_MAPPINGS.countryofmanufacture.default,
   };
 }
 
@@ -328,6 +345,8 @@ async function main() {
       // { id: 'pricelevel2currency', title: 'pricelevel2currency' },
       { id: 'istaxable', title: 'istaxable' },
       { id: 'taxschedule', title: 'taxschedule' },
+      { id: 'manufacturer', title: 'manufacturer' },
+      { id: 'countryofmanufacture', title: 'countryofmanufacture' },
     ];
 
     const csvWriter = initializeCSV(outputFilename, headers);
