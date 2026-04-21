@@ -24,6 +24,16 @@ const DEBUG = false;
 const DEFAULT_SHOPIFY_INPUT_FILENAME = 'SHOPIFY-ITEMS-EXPORT';
 const DEFAULT_NETSUITE_INPUT_FILENAME = 'NETSUITE-ITEMS-EXPORT';
 
+const sanitizeTypeForFilename = (type: string): string => {
+  const normalized = type
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return normalized === '' ? 'unknown_type' : normalized;
+};
+
 async function main() {
   try {
     const runStartedAt = Date.now();
@@ -147,9 +157,6 @@ async function main() {
       'NetSuite inventory items for import.',
     );
 
-    // export file name
-    const outputFilename = 'Shopify_to_NetSuite_Match_Items';
-
     // initialize CSV writer
     // generate headers from FIELD_MAPS
     const headers = [
@@ -161,12 +168,40 @@ async function main() {
         title: el.netsuiteField.toLowerCase().replace(/ /g, '_'),
       })),
     ];
-    const csvWriter = initializeCSV(outputFilename, headers);
+
+    const matchedItemsByType: Record<
+      string,
+      (typeof filteredNetSuiteImportItems)[number][]
+    > = {};
+    filteredNetSuiteImportItems.forEach((item) => {
+      const itemType = item.type?.trim() || 'Unknown Type';
+      if (!matchedItemsByType[itemType]) {
+        matchedItemsByType[itemType] = [];
+      }
+      matchedItemsByType[itemType].push(item);
+    });
 
     const writeStartedAt = Date.now();
-    await csvWriter.writeRecords(filteredNetSuiteImportItems);
+
+    const typeEntries = Object.entries(matchedItemsByType);
+    console.log('Writing', typeEntries.length, 'type-specific output files...');
+
+    for (const [itemType, rows] of typeEntries) {
+      const outputFilename = `Shopify_to_NetSuite_Match_Items_${sanitizeTypeForFilename(itemType)}`;
+      const csvWriter = initializeCSV(outputFilename, headers);
+      await csvWriter.writeRecords(rows);
+      console.log(
+        'Wrote',
+        rows.length,
+        'rows for type',
+        `'${itemType}'`,
+        'to',
+        `${outputFilename}.csv`,
+      );
+    }
+
     const completedAt = Date.now();
-    console.log('NetSuite inventory items CSV written to', outputFilename);
+    console.log('Finished writing type-specific NetSuite match CSV files.');
 
     console.log('Timing Summary:');
     console.log(
