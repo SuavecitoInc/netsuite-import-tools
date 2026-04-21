@@ -11,16 +11,16 @@ import {
   getHandlesWithMultipleVariants,
   getDescriptionByHandle,
   getNameByHandle,
+  gramsToPounds,
+  formatDurationMs,
 } from './helpers';
 
 const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
 
 // local script constants
 const DEBUG = false;
-const EXCLUDE_MATRIX_ITEMS = true;
-
-const formatDurationMs = (durationMs: number): string =>
-  `${(durationMs / 1000).toFixed(2)}s`;
+const EXCLUDE_MATRIX_ITEMS = false;
+const CONVERT_WEIGHT_TO_POUNDS = true;
 
 async function main() {
   try {
@@ -101,7 +101,12 @@ async function main() {
       }
       // get name by handle if it does not already exist
       const itemName = item[INVENTORY_ITEM_MAPPINGS.displayname.field];
-      let name = itemName;
+      let name =
+        !EXCLUDE_MATRIX_ITEMS &&
+        item['Option1 Value'] &&
+        item['Option1 Value'] !== 'Default Title'
+          ? `${itemName} - ${item['Option1 Value']}`
+          : itemName;
       if (!itemName || itemName === '') {
         const nameFromHandle = getNameByHandle(
           item.Handle,
@@ -117,6 +122,16 @@ async function main() {
       }
 
       logConversionProgress(index + 1);
+
+      // weight
+      const itemWeight = item[INVENTORY_ITEM_MAPPINGS.weight.field];
+      const weightInPounds = itemWeight
+        ? gramsToPounds(Number(itemWeight))
+        : '';
+      const weight = CONVERT_WEIGHT_TO_POUNDS ? weightInPounds : itemWeight;
+      const weightUnit = CONVERT_WEIGHT_TO_POUNDS
+        ? 'POUNDS'
+        : INVENTORY_ITEM_MAPPINGS.weightunit.default;
 
       return {
         externalid: item[INVENTORY_ITEM_MAPPINGS.externalid.field],
@@ -137,8 +152,9 @@ async function main() {
           INVENTORY_ITEM_MAPPINGS.countryofmanufacture.default,
         description: descriptionHtml,
         salesdescription: name,
-        weight: item[INVENTORY_ITEM_MAPPINGS.weight.field],
-        weightunit: INVENTORY_ITEM_MAPPINGS.weightunit.default,
+        weight: weight,
+        weightunit: weightUnit,
+
         salesprice: item[INVENTORY_ITEM_MAPPINGS.salesprice.field],
         pricelevel1: INVENTORY_ITEM_MAPPINGS.pricelevel1.default,
         pricelevel1price: item[INVENTORY_ITEM_MAPPINGS.pricelevel1price.field],

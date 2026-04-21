@@ -12,17 +12,18 @@ import {
   getHandlesWithMultipleVariants,
   getDescriptionByHandle,
   getNameByHandle,
+  gramsToPounds,
+  formatDurationMs,
 } from './helpers';
 
 const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
 
 // local script constants
 const DEBUG = false;
+const CONVERT_WEIGHT_TO_POUNDS = true;
+
 const PRODUCT_CODE = 'Variant SKU';
 const FAMILY_SKU = 'Handle';
-
-const formatDurationMs = (durationMs: number): string =>
-  `${(durationMs / 1000).toFixed(2)}s`;
 
 // Types
 interface NetSuiteMatrixItem {
@@ -156,6 +157,14 @@ function createChildItem(
     }
   }
 
+  // weight
+  const itemWeight = item[INVENTORY_ITEM_MAPPINGS.weight.field];
+  const weightInPounds = itemWeight ? gramsToPounds(Number(itemWeight)) : '';
+  const weight = CONVERT_WEIGHT_TO_POUNDS ? weightInPounds : itemWeight;
+  const weightUnit = CONVERT_WEIGHT_TO_POUNDS
+    ? 'POUNDS'
+    : (INVENTORY_ITEM_MAPPINGS.weightunit.default as string);
+
   return {
     externalid: externalId,
     name: item[INVENTORY_ITEM_MAPPINGS.name.field],
@@ -167,8 +176,8 @@ function createChildItem(
     ...getBaseItemProperties(item),
     description: descriptionHtml,
     salesdescription: name,
-    weight: item[INVENTORY_ITEM_MAPPINGS.weight.field],
-    weightunit: item[INVENTORY_ITEM_MAPPINGS.weightunit.field],
+    weight: weight,
+    weightunit: weightUnit,
     salesprice: item[INVENTORY_ITEM_MAPPINGS.salesprice.field],
     pricelevel1: INVENTORY_ITEM_MAPPINGS.pricelevel1.default,
     pricelevel1price: item[INVENTORY_ITEM_MAPPINGS.pricelevel1price.field],

@@ -77,6 +77,8 @@ export const getDescriptionByHandle = (
   return description;
 };
 
+const excludedOptionValuesForName = new Set(['Default Title', '']);
+
 export const getNameByHandle = (
   handle: string,
   option: string,
@@ -95,7 +97,7 @@ export const getNameByHandle = (
   let name = '';
   let emptyName = true;
   matchingItems.forEach((item) => {
-    if (item.Title !== '') {
+    if (item.Title !== '' && !excludedOptionValuesForName.has(option)) {
       DEBUG && console.log('Found name for handle', handle, ':', item.Title);
       name = `${item.Title} - ${option}`;
       emptyName = false;
@@ -148,3 +150,10 @@ export const getFieldValueByHandle = (
 
   return value;
 };
+
+export const gramsToPounds = (grams: number): number => {
+  return grams * 0.00220462;
+};
+
+export const formatDurationMs = (durationMs: number): string =>
+  `${(durationMs / 1000).toFixed(2)}s`;

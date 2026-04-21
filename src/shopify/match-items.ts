@@ -1,6 +1,6 @@
 import { initializeCSV, parseCSV, createProgressLogger } from '../lib/utils';
 import type { ShopifyItemRow } from '../lib/types/shopify';
-import { getFieldValueByHandle } from './helpers';
+import { getFieldValueByHandle, formatDurationMs } from './helpers';
 import { SHOPIFY_FIELDS } from '../lib/configs/shopify';
 
 // Update these mappings based on the fields you want to import from Shopify to NetSuite and their corresponding NetSuite
@@ -23,9 +23,6 @@ type NetSuiteItemRow = {
 const DEBUG = false;
 const DEFAULT_SHOPIFY_INPUT_FILENAME = 'SHOPIFY-ITEMS-EXPORT';
 const DEFAULT_NETSUITE_INPUT_FILENAME = 'NETSUITE-ITEMS-EXPORT';
-
-const formatDurationMs = (durationMs: number): string =>
-  `${(durationMs / 1000).toFixed(2)}s`;
 
 async function main() {
   try {
