@@ -175,7 +175,7 @@ function createChildItem(
   const weightInPounds = itemWeight ? gramsToPounds(Number(itemWeight)) : '';
   const weight = CONVERT_WEIGHT_TO_POUNDS ? weightInPounds : itemWeight;
   const weightUnit = CONVERT_WEIGHT_TO_POUNDS
-    ? 'POUNDS'
+    ? 'lb'
     : (INVENTORY_ITEM_MAPPINGS.weightunit.default as string);
 
   return {

@@ -144,7 +144,7 @@ async function main() {
         : '';
       const weight = CONVERT_WEIGHT_TO_POUNDS ? weightInPounds : itemWeight;
       const weightUnit = CONVERT_WEIGHT_TO_POUNDS
-        ? 'POUNDS'
+        ? 'lb'
         : INVENTORY_ITEM_MAPPINGS.weightunit.default;
 
       return {
