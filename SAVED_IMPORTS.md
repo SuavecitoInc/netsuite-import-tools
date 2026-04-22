@@ -10,6 +10,7 @@
   - [Inventory Items](#inventory-items)
   - [Assembly Items](#assembly-items)
   - [Matrix Items](#matrix-items)
+  - [Vendors](#vendors)
 - [Field Reference](#field-reference)
 - [Common Import Errors](#common-import-errors)
 
@@ -252,6 +253,81 @@ Components are dynamically numbered based on how many components each assembly h
 
 ---
 
+### Vendors
+
+The vendors export script generates three CSV files for vendor imports.
+
+| CSV File                                                          | NetSuite Import Type | Purpose                             |
+| ----------------------------------------------------------------- | -------------------- | ----------------------------------- |
+| `output/Dear_Suppliers_to_NetSuite_Vendors.csv`                   | Vendor (Add)         | Creates vendor records              |
+| `output/Dear_Supplier_Addresses_to_NetSuite_Vendor_Addresses.csv` | Vendor (Update)      | Imports vendor address book entries |
+| `output/Dear_Supplier_Contacts_to_NetSuite_Vendor_Contacts.csv`   | Vendor Contact       | Imports vendor contact records      |
+
+#### Vendor Records
+
+**CSV File:** `output/Dear_Suppliers_to_NetSuite_Vendors.csv`
+
+**NetSuite Import Type:** Vendor
+
+| CSV Column    | NetSuite Field            | Type        | Notes                                 |
+| ------------- | ------------------------- | ----------- | ------------------------------------- |
+| `externalid`  | Vendor : External ID      | Default     | Generated from supplier name handle   |
+| `name`        | Vendor : Company Name     | Default     | Supplier name                         |
+| `email`       | Vendor : Email            | Default     | Primary vendor email                  |
+| `taxnumber`   | Vendor : Tax ID           | Default     | Tax number from source                |
+| `fax`         | Vendor : Fax              | Default     | Fax phone                             |
+| `mobilephone` | Vendor : Mobile Phone     | Default     | Mobile phone                          |
+| `phone`       | Vendor : Phone            | Default     | Main phone                            |
+| `comments`    | Vendor : Comments         | Default     | Freeform notes                        |
+| `subsidiary`  | Vendor : Subsidiary (Req) | Internal ID | Defaults to `1`                       |
+| `individual`  | Vendor : Is Individual    | Default     | Defaults to `false` (company vendors) |
+
+#### Vendor Address Records
+
+**CSV File:** `output/Dear_Supplier_Addresses_to_NetSuite_Vendor_Addresses.csv`
+
+**NetSuite Import Type:** Vendor (Address subrecord)
+
+| CSV Column     | NetSuite Field                   | Type        | Notes                                  |
+| -------------- | -------------------------------- | ----------- | -------------------------------------- |
+| `externalid`   | Vendor : External ID             | External ID | Links address row to the vendor        |
+| `addressline1` | Vendor Address : Address 1       | Default     | Street line 1                          |
+| `addressline2` | Vendor Address : Address 2       | Default     | Street line 2                          |
+| `city`         | Vendor Address : City            | Default     | City                                   |
+| `state`        | Vendor Address : State/Province  | Default     | State or province                      |
+| `postalcode`   | Vendor Address : ZIP/Postal Code | Default     | Postal code                            |
+| `country`      | Vendor Address : Country         | Default     | Country name/code accepted by NetSuite |
+| `addressee`    | Vendor Address : Addressee       | Default     | Usually supplier name                  |
+
+#### Vendor Contact Records
+
+**CSV File:** `output/Dear_Supplier_Contacts_to_NetSuite_Vendor_Contacts.csv`
+
+**NetSuite Import Type:** Vendor Contact
+
+| CSV Column    | NetSuite Field         | Type        | Notes                                          |
+| ------------- | ---------------------- | ----------- | ---------------------------------------------- |
+| `externalid`  | Contact : External ID  | Default     | Generated from supplier + contact name handles |
+| `vendor`      | Contact : Company      | External ID | Vendor external ID to attach contact to        |
+| `contact`     | Contact : Entity ID    | Default     | Full contact display name                      |
+| `phone`       | Contact : Phone        | Default     | Contact phone                                  |
+| `mobilephone` | Contact : Mobile Phone | Default     | Contact mobile                                 |
+| `fax`         | Contact : Fax          | Default     | Contact fax                                    |
+| `email`       | Contact : Email        | Default     | Contact email                                  |
+| `jobtitle`    | Contact : Job Title    | Default     | Contact title                                  |
+| `firstName`   | Contact : First Name   | Default     | Derived from contact full name                 |
+| `lastName`    | Contact : Last Name    | Default     | Derived from contact full name                 |
+
+#### Recommended Vendor Import Order
+
+1. Import vendor records first (`Dear_Suppliers_to_NetSuite_Vendors.csv`)
+2. Import vendor addresses second (`Dear_Supplier_Addresses_to_NetSuite_Vendor_Addresses.csv`)
+3. Import vendor contacts last (`Dear_Supplier_Contacts_to_NetSuite_Vendor_Contacts.csv`)
+
+> **Important:** Vendor addresses and contacts rely on matching vendor identifiers, so vendors must exist before importing related rows.
+
+---
+
 ## Field Reference
 
 ### Field Types Explained
@@ -325,12 +401,12 @@ Components are dynamically numbered based on how many components each assembly h
 1. **Always backup** - Export existing items before importing updates
 2. **Test with small batch** - Import 5-10 items first to verify mappings
 3. **Check data quality** - Ensure no blank required fields or invalid characters
-4. **Follow import order** - Inventory → Matrix → Assembly
+4. **Follow import order** - Inventory → Matrix → Assembly → Vendors
 5. **Review error log** - NetSuite provides detailed error messages for each failed row
 6. **Use external IDs consistently** - External IDs are case-sensitive
 7. **Save your mappings** - Once working, save the mapping for reuse
 
 ---
 
-**Last Updated:** November 2025  
+**Last Updated:** April 2026  
 **NetSuite Version:** 2024.2+
