@@ -14,6 +14,7 @@
   - [2. Matrix Items](#2-matrix-items)
   - [3. Assembly Items](#3-assembly-items)
   - [4. Inventory Availability](#4-inventory-availability)
+  - [5. Suppliers](#5-suppliers)
 - [Shopify](#shopify)
   - [Required CSV Exports](#required-csv-exports)
   - [Usage](#usage)
@@ -85,10 +86,13 @@ Before running any scripts, export the following CSV files and place them in the
    - Export only apparel/sized items
    - Include family and option fields
    - **Important**: Remove these items from `Inventory_List.csv`
+4. **Suppliers**
+   - Export all suppliers, supplier contacts and supplier addresses from Dear/Cin7
+   - Save as `input/Suppliers.csv`, `input/SupplierContacts.csv`, and `input/SupplierAddresses.csv`
 
 #### From Shopify
 
-4. **Product Export** → Save as `input/SHOPIFY-ITEMS.csv`
+5. **Product Export** → Save as `input/SHOPIFY-ITEMS.csv`
    - Export all products from your Shopify store
    - Include Fields Handle, Title, Body (HTML), Vendor, Product Category, Type, and Variant SKU. Remove anything else
 
@@ -99,6 +103,10 @@ input/
 ├── Assembly_BOM_List.csv
 ├── Inventory_List.csv
 ├── Inventory_Matrix_List.csv
+├── Suppliers.csv
+├── SupplierContacts.csv
+├── SupplierAddresses.csv
+
 └── SHOPIFY-ITEMS.csv
 ```
 
@@ -153,6 +161,22 @@ npm run dear:inventory-availability
 ```
 
 **Output:** `output/Dear_to_NetSuite_Inventory_Adjustment.csv`
+
+#### 5. Suppliers
+
+Generates supplier and supplier contact records for NetSuite based on Dear supplier data.
+
+**Run:**
+
+```bash
+npm run dear:vendors
+```
+
+**Output:**
+
+- `output/Dear_to_NetSuite_Vendors.csv`
+- `output/Dear_to_NetSuite_Vendor_Addresses.csv`
+- `output/Dear_Supplier_Contacts_to_NetSuite_Vendor_Contacts.csv`
 
 ## SHOPIFY
 
@@ -324,6 +348,9 @@ netsuite-import-tools/
 │   ├── Inventory_List.csv
 │   ├── Inventory_Matrix_List.csv
 │   ├── Inventory_Availability.csv
+│   ├── Suppliers.csv
+│   ├── SupplierContacts.csv
+│   ├── SupplierAddresses.csv
 │   ├── NETSUITE-ITEMS-EXPORT.csv
 │   ├── SHOPIFY-ITEMS-EXPORT.csv
 │   └── SHOPIFY-ITEMS.csv
@@ -331,11 +358,16 @@ netsuite-import-tools/
 │   ├── NetSuite_Assembly_Items.csv
 │   ├── NetSuite_Inventory_Items.csv
 │   └── NetSuite_Inventory_Items_Matrix.csv
+│   ├── Dear_to_NetSuite_Vendors.csv
+│   ├── Dear_Supplier_Contacts_to_NetSuite_Vendor_Contacts.csv
+│   └── Dear_Supplier_Addresses_to_NetSuite_Vendor_Addresses.csv
 ├── src/
 │   ├── dear/
 │   │   ├── assembly-item.ts           # Assembly items script
 │   │   ├── inventory-item.ts          # Standard inventory script
 │   │   └── inventory-item-matrix.ts   # Matrix items script
+│   │   └── vendors.ts                 # Supplier script
+
 │   ├── shopify/
 │   │   ├── helpers.ts                 # Helper functions for Shopify integration
 │   │   ├── inventory-item.ts          # Standard inventory script
@@ -370,32 +402,3 @@ These mappings define how CSV columns map to NetSuite fields during import.
 ### Component SKUs
 
 Assembly component SKUs are automatically included in the inventory items output, even if they're not in Shopify. This ensures all components exist before assemblies are imported.
-
----
-
-## Development
-
-### Adding New Field Mappings
-
-Edit `src/lib/configs/dear.ts`:
-
-```typescript
-export const INVENTORY_ITEM_MAPPINGS: MAPPINGS = {
-  newfieldname: {
-    field: 'DearFieldName', // Source field from Dear/Cin7
-    default: 'Default Value', // Or null if mapping from source
-  },
-};
-```
-
-### Running Individual Scripts
-
-```bash
-npx tsx src/inventory-item.ts
-npx tsx src/assembly-item.ts
-npx tsx src/inventory-item-matrix.ts
-```
-
----
-
-**Questions?** Contact the development team or review the source code in `src/`.

@@ -348,3 +348,18 @@ export const createProgressLogger = (
     );
   };
 };
+
+export const formatDurationMs = (durationMs: number): string =>
+  `${(durationMs / 1000).toFixed(2)}s`;
+
+export const handleize = (str: string): string => {
+  if (!str || typeof str !== 'string') {
+    return '';
+  }
+
+  return str
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+};

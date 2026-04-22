@@ -154,6 +154,3 @@ export const getFieldValueByHandle = (
 export const gramsToPounds = (grams: number): number => {
   return grams * 0.00220462;
 };
-
-export const formatDurationMs = (durationMs: number): string =>
-  `${(durationMs / 1000).toFixed(2)}s`;

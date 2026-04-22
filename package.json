@@ -9,6 +9,7 @@
     "dear:assembly-item": "tsx src/dear/assembly-item.ts",
     "dear:inventory-item-matrix": "tsx src/dear/inventory-item-matrix.ts",
     "dear:inventory-availability": "tsx src/dear/inventory-availability.ts",
+    "dear:vendors": "tsx src/dear/vendors.ts",
     "shopify:inventory-item": "tsx src/shopify/inventory-item.ts",
     "shopify:inventory-item-matrix": "tsx src/shopify/inventory-item-matrix.ts",
     "shopify:match-items": "tsx src/shopify/match-items.ts",

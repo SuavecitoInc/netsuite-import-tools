@@ -3,6 +3,7 @@ import {
   parseCSV,
   barcodeStringToNumber,
   createProgressLogger,
+  formatDurationMs,
 } from '../lib/utils';
 
 import { INVENTORY_ITEM_MAPPINGS } from '../lib/configs/shopify';
@@ -13,7 +14,6 @@ import {
   getNameByHandle,
   getFieldValueByHandle,
   gramsToPounds,
-  formatDurationMs,
 } from './helpers';
 
 const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT

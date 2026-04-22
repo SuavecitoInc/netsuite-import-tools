@@ -4,6 +4,7 @@ import {
   barcodeStringToNumber,
   handleToTitleCase,
   createProgressLogger,
+  formatDurationMs,
 } from '../lib/utils';
 
 import { INVENTORY_ITEM_MAPPINGS } from '../lib/configs/shopify';
@@ -13,7 +14,6 @@ import {
   getDescriptionByHandle,
   getNameByHandle,
   gramsToPounds,
-  formatDurationMs,
   getFieldValueByHandle,
 } from './helpers';
 

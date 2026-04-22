@@ -1,6 +1,11 @@
-import { initializeCSV, parseCSV, createProgressLogger } from '../lib/utils';
+import {
+  initializeCSV,
+  parseCSV,
+  createProgressLogger,
+  formatDurationMs,
+} from '../lib/utils';
 import type { ShopifyItemRow } from '../lib/types/shopify';
-import { getFieldValueByHandle, formatDurationMs } from './helpers';
+import { getFieldValueByHandle } from './helpers';
 import { SHOPIFY_FIELDS } from '../lib/configs/shopify';
 
 // Update these mappings based on the fields you want to import from Shopify to NetSuite and their corresponding NetSuite

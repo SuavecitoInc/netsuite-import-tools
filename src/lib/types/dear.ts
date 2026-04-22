@@ -131,3 +131,33 @@ export type DearInventoryAvailabilityRow = {
   PriceTier2: number;
   PriceTier3: number;
 };
+
+export type DearSupplierRow = {
+  Comments: string;
+  Name: string;
+  TaxNumber: string;
+  Email: string;
+  Fax: string;
+  MobilePhone: string;
+  Phone: string;
+};
+
+export type DearSupplierAddressRow = {
+  Name: string;
+  AddressLine1: string;
+  AddressLine2: string;
+  City: string;
+  State: string;
+  PostCode: string;
+  Country: string;
+};
+
+export type DearSupplierContactRow = {
+  Supplier: string;
+  Email: string;
+  Contact: string;
+  Fax: string;
+  MobilePhone: string;
+  Phone: string;
+  JobTitle: string;
+};
