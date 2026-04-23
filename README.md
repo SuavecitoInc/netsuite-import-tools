@@ -8,20 +8,20 @@
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Dear / Cin7](#dear--cin7)
-  - [Required CSV Exports](#required-csv-exports)
-  - [Usage](#usage)
-  - [1. Inventory Items](#1-inventory-items)
-  - [2. Matrix Items](#2-matrix-items)
-  - [3. Assembly Items](#3-assembly-items)
-  - [4. Inventory Adjustment](#4-inventory-adjustment)
+  - [Required CSV Exports](#dear-required-csv-exports)
+  - [Usage](#dear-usage)
+  - [1. Inventory Items](#1-dear-inventory-items)
+  - [2. Matrix Items](#2-dear-matrix-items)
+  - [3. Assembly Items](#3-dear-assembly-items)
+  - [4. Inventory Adjustment](#4-dear-inventory-adjustment)
   - [5. Suppliers](#5-suppliers)
 - [Shopify](#shopify)
-  - [Required CSV Exports](#required-csv-exports)
+  - [Required CSV Exports](#shopify-required-csv-exports)
   - [Usage](#usage)
-  - [1. Inventory Items](#1-inventory-items)
-  - [2. Matrix Items](#2-matrix-items)
-  - [3. Match Items](#3-match-items)
-  - [4. Inventory Adjustment](#4-inventory-adjustment)
+  - [1. Inventory Items](#1-shopify-inventory-items)
+  - [2. Matrix Items](#2-shopify-matrix-items)
+  - [3. Match Items](#3-shopify-match-items)
+  - [4. Inventory Adjustment](#4-shopify-inventory-adjustment)
 - [NetSuite](#netsuite)
   - [Import Order](#import-order)
   - [Configuration](#configuration)
@@ -69,7 +69,7 @@ mkdir -p input output
 
 ## DEAR / CIN7
 
-### Required CSV Exports
+### Dear Required CSV Exports
 
 Before running any scripts, export the following CSV files and place them in the `input/` directory:
 
@@ -110,9 +110,9 @@ input/
 └── SHOPIFY-ITEMS.csv
 ```
 
-### Usage
+### Dear Usage
 
-#### 1. Inventory Items
+#### 1. Dear Inventory Items
 
 Generates standard inventory items for NetSuite, excluding assemblies and matrix items.
 
@@ -124,7 +124,7 @@ npm run dear:inventory-item
 
 **Output:** `output/Dear_to_NetSuite_Inventory_Items.csv`
 
-#### 2. Matrix Items
+#### 2. Dear Matrix Items
 
 Generates parent and child matrix items for product families (e.g., apparel with sizes).
 
@@ -138,7 +138,7 @@ npm run dear:inventory-item-matrix
 
 **Note:** This includes both parent items (1 per family) and child items (variants).
 
-#### 3. Assembly Items
+#### 3. Dear Assembly Items
 
 Generates assembly/bundle items with their component mappings.
 
@@ -150,7 +150,7 @@ npm run dear:assembly-item
 
 **Output:** `output/Dear_to_NetSuite_Assembly_Items.csv`
 
-#### 4. Inventory Adjustment
+#### 4. Dear Inventory Adjustment
 
 Generates inventory adjustment for NetSuite based on Dear inventory data.
 
@@ -162,7 +162,7 @@ npm run dear:inventory-adjustment
 
 **Output:** `output/Dear_to_NetSuite_Inventory_Adjustment.csv`
 
-#### 5. Suppliers
+#### 5. Dear Suppliers
 
 Generates supplier and supplier contact records for NetSuite based on Dear supplier data.
 
@@ -180,7 +180,7 @@ npm run dear:vendors
 
 ## SHOPIFY
 
-### Required CSV Exports
+### Shopify Required CSV Exports
 
 Before running any scripts, export the following CSV files and place them in the `input/` directory:
 
@@ -204,9 +204,9 @@ input/
 └── SHOPIFY-ITEMS-EXPORT.csv
 ```
 
-### Usage
+### Shopify Usage
 
-#### 1. Inventory Items
+#### 1. Shopify Inventory Items
 
 Generates standard inventory items for NetSuite, excluding assemblies and matrix items.
 
@@ -218,7 +218,7 @@ npm run shopify:inventory-item -- SHOPIFY-ITEMS-EXPORT.csv
 
 **Output:** `output/Shopify_to_NetSuite_Inventory_Items.csv`
 
-#### 2. Matrix Items
+#### 2. Shopify Matrix Items
 
 Generates parent and child matrix items for product families (e.g., apparel with sizes).
 
@@ -232,7 +232,7 @@ npm run shopify:inventory-item-matrix -- SHOPIFY-ITEMS-EXPORT.csv
 
 **Note:** This includes both parent items (1 per family) and child items (variants).
 
-#### 3. Match Items
+#### 3. Shopify Match Items
 
 Generates a CSF of items, matching Shopify items to NetSuite items based on SKU, and mapping fields from Shopify to NetSuite. You must add the fields you want to map to the FIELD_MAPS.
 
@@ -255,7 +255,7 @@ npm run shopify:match-items -- SHOPIFY-ITEMS-EXPORT NETSUITE-ITEMS-EXPORT
 
 **Output:** `output/Shopify_to_NetSuite_Matched_Items.csv`
 
-#### 4. Inventory Adjustment
+#### 4. Shopify Inventory Adjustment
 
 Generates inventory adjustment for NetSuite based on Shopify inventory data.
 
