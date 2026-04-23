@@ -13,7 +13,7 @@
   - [1. Inventory Items](#1-inventory-items)
   - [2. Matrix Items](#2-matrix-items)
   - [3. Assembly Items](#3-assembly-items)
-  - [4. Inventory Availability](#4-inventory-availability)
+  - [4. Inventory Adjustment](#4-inventory-adjustment)
   - [5. Suppliers](#5-suppliers)
 - [Shopify](#shopify)
   - [Required CSV Exports](#required-csv-exports)
@@ -21,6 +21,7 @@
   - [1. Inventory Items](#1-inventory-items)
   - [2. Matrix Items](#2-matrix-items)
   - [3. Match Items](#3-match-items)
+  - [4. Inventory Adjustment](#4-inventory-adjustment)
 - [NetSuite](#netsuite)
   - [Import Order](#import-order)
   - [Configuration](#configuration)
@@ -150,14 +151,14 @@ npm run dear:assembly-item
 
 **Output:** `output/Dear_to_NetSuite_Assembly_Items.csv`
 
-#### 4. Inventory Availability
+#### 4. Inventory Adjustment
 
-Generates inventory availability adjustments for NetSuite based on Dear inventory data.
+Generates inventory adjustment for NetSuite based on Dear inventory data.
 
 **Run:**
 
 ```bash
-npm run dear:inventory-availability
+npm run dear:inventory-adjustment
 ```
 
 **Output:** `output/Dear_to_NetSuite_Inventory_Adjustment.csv`
@@ -254,6 +255,18 @@ npm run shopify:match-items -- SHOPIFY-ITEMS-EXPORT NETSUITE-ITEMS-EXPORT
 ```
 
 **Output:** `output/Shopify_to_NetSuite_Matched_Items.csv`
+
+#### 4. Inventory Adjustment
+
+Generates inventory adjustment for NetSuite based on Shopify inventory data.
+
+**Run:**
+
+```bash
+npm run shopify:inventory-adjustment
+```
+
+**Output:** `output/Shopify_to_NetSuite_Inventory_Adjustment.csv`
 
 ## NETSUITE
 

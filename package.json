@@ -13,6 +13,7 @@
     "shopify:inventory-item": "tsx src/shopify/inventory-item.ts",
     "shopify:inventory-item-matrix": "tsx src/shopify/inventory-item-matrix.ts",
     "shopify:match-items": "tsx src/shopify/match-items.ts",
+    "shopify:inventory-adjustment": "tsx src/shopify/inventory-adjustment.ts",
     "clean": "rm -f ./output/*"
   },
   "author": "j-Riv <jriv@suavecito.com>",

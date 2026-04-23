@@ -52,3 +52,23 @@ export type ShopifyItemRow = {
   'Cost per item': number;
   Status: string;
 };
+
+export type ShopifyInventoryItemRow = {
+  Handle: string;
+  Title: string;
+  'Option 1 Name': string;
+  'Option 1 Value': string;
+  'Option 2 Name': string;
+  'Option 2 Value': string;
+  'Option 3 Name': string;
+  'Option 3 Value': string;
+  SKU: string;
+  Location: string;
+  'Bin name': string;
+  'Incoming (not editable)': number;
+  'Unavailable (not editable)': number;
+  'Committed (not editable)': number;
+  'Available (not editable)': number;
+  'On hand (current)': number;
+  'On hand (new)': number;
+};
