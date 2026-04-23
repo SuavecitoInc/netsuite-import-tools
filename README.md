@@ -107,7 +107,6 @@ input/
 ├── Suppliers.csv
 ├── SupplierContacts.csv
 ├── SupplierAddresses.csv
-
 └── SHOPIFY-ITEMS.csv
 ```
 
