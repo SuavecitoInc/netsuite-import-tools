@@ -39,6 +39,7 @@ export const SHOPIFY_FIELDS = {
   Price: 'Variant Price',
   Barcode: 'Variant Barcode',
   Description: 'Body (HTML)',
+  CostPerItem: 'Cost per item',
 };
 
 export const NETSUITE_FIELDS = {
@@ -118,7 +119,7 @@ export const INVENTORY_ITEM_MAPPINGS: MAPPINGS = {
     default: 'Retail',
   },
   pricelevel1price: {
-    field: 'PriceTier1',
+    field: SHOPIFY_FIELDS.Price,
     default: null,
   },
   pricelevel1currency: {
@@ -148,5 +149,9 @@ export const INVENTORY_ITEM_MAPPINGS: MAPPINGS = {
   purchasetaxcode: {
     field: null,
     default: 'Taxable',
+  },
+  averagecost: {
+    field: SHOPIFY_FIELDS.CostPerItem,
+    default: null,
   },
 };

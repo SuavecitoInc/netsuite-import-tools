@@ -98,7 +98,7 @@ async function main() {
         if (descriptionFromHandle) {
           descriptionHtml = descriptionFromHandle;
         } else {
-          descriptionHtml = INVENTORY_ITEM_MAPPINGS.displayname.field;
+          descriptionHtml = item[INVENTORY_ITEM_MAPPINGS.displayname.field];
         }
       }
       // get name by handle if it does not already exist
@@ -180,6 +180,7 @@ async function main() {
         //   INVENTORY_ITEM_MAPPINGS.pricelevel2currency.default,
         istaxable: INVENTORY_ITEM_MAPPINGS.istaxable.default,
         taxschedule: INVENTORY_ITEM_MAPPINGS.taxschedule.default,
+        averagecost: item[INVENTORY_ITEM_MAPPINGS.averagecost.field],
       };
     });
     const transformDoneAt = Date.now();
@@ -218,6 +219,7 @@ async function main() {
       // { id: 'pricelevel2currency', title: 'pricelevel2currency' },
       { id: 'istaxable', title: 'istaxable' },
       { id: 'taxschedule', title: 'taxschedule' },
+      { id: 'averagecost', title: 'averagecost' },
     ];
 
     const writeStartedAt = Date.now();

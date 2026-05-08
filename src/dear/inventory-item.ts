@@ -7,6 +7,11 @@ import type {
   DearInventoryItemRow,
 } from '../lib/types/dear';
 
+// filenames
+const SHOPIFY_IMPORT = 'SHOPIFY-ITEMS';
+const DEAR_ASSEMBLY_ITEM_BOM = 'Assembly_BOM_List';
+const DEAR_INVENTORY_ITEM = 'Inventory_List';
+
 // local script constants
 const DEBUG = false;
 const PRODUCT_CODE = 'ProductCode'; // dear sku field - from inventory list
@@ -18,7 +23,7 @@ async function main() {
   try {
     console.log('Getting Shopify Items...');
     // load shopify retail items to filter inventory items
-    const shopifyExportFilePath = 'input/SHOPIFY-ITEMS';
+    const shopifyExportFilePath = `input/${SHOPIFY_IMPORT}`;
     const shopifyItemRows = await parseCSV<ShopifyItemRow>(
       shopifyExportFilePath,
     );
@@ -27,7 +32,7 @@ async function main() {
 
     console.log('Generating assembly item exclusion list...');
     // load dear assembly bom list to get assembly items to exclude
-    const assemblyBomFilePath = 'input/Assembly_BOM_List';
+    const assemblyBomFilePath = `input/${DEAR_ASSEMBLY_ITEM_BOM}`;
     const assemblyBomRows =
       await parseCSV<DearAssemblyItemRow>(assemblyBomFilePath);
 
@@ -60,7 +65,7 @@ async function main() {
     }
 
     // Further processing to generate inventory item import list would go here
-    const inventoryItemFilePath = 'input/Inventory_List';
+    const inventoryItemFilePath = `input/${DEAR_INVENTORY_ITEM}`;
     const inventoryItemRows = await parseCSV<DearInventoryItemRow>(
       inventoryItemFilePath,
     );

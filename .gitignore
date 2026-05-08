@@ -23,3 +23,5 @@ node_modules
 
 input/*.csv
 output/*.csv
+input/archive
+output/archive

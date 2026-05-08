@@ -10,19 +10,20 @@ import type {
 } from '../lib/types/shopify';
 
 // files
-const SHOPIFY_ITEMS = 'GUNTHERS_PRODUCT_EXPORT';
-const SHOPIFY_INVENTORY = 'GUNTHERS_INVENTORY_EXPORT';
+const SHOPIFY_ITEMS = 'TN_PRODUCT_EXPORT';
+const SHOPIFY_INVENTORY = 'TN_INVENTORY_EXPORT';
 
 // local script constants
 const REMOVE_NEGATIVE_QUANTITY = false; // set to true to remove negative quantities, false to keep them (NetSuite will reject negative quantities on inventory adjustments)
-const EXTERNAL_ID = 'SOME EXTERNAL ID';
-const MEMO = 'SOME MEMO';
+const EXTERNAL_ID = 'TN-SHOPIFY-TEST-INV-ADJ-42926'; // external id for NetSuite inventory adjustment record, can be used for upsert operations in NetSuite or just for reference
+const MEMO = 'TN-SHOPIFY-TEST-INV-ADJ-42926';
 
 const CONFIG = {
-  subsidiary: 1, // map to NetSuite subsidiary internal id
-  location: 1, // map to NetSuite location internal id
+  subsidiary: 4, // map to NetSuite subsidiary internal id
+  location: 51, // map to NetSuite location internal id
   status: 1, // good
   date: '4/20/2026',
+  bin: 4314,
 };
 
 async function main() {
@@ -101,6 +102,7 @@ async function main() {
           memo: MEMO,
           subsidiary: CONFIG.subsidiary,
           location: CONFIG.location,
+          bin: CONFIG.bin,
           status: CONFIG.status,
           date: CONFIG.date,
           item: item.SKU,
@@ -118,6 +120,7 @@ async function main() {
       { id: 'memo', title: 'memo' },
       { id: 'subsidiary', title: 'subsidiary' },
       { id: 'location', title: 'location' },
+      { id: 'bin', title: 'bin' },
       { id: 'status', title: 'status' },
       { id: 'date', title: 'date' },
       { id: 'item', title: 'item' },

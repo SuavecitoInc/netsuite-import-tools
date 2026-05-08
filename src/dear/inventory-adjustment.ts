@@ -10,6 +10,10 @@ import type {
   DearInventoryAvailabilityRow,
 } from '../lib/types/dear';
 
+// filenames
+const DEAR_INVENTORY_LIST = 'Inventory_List';
+const DEAR_INVENTORY_AVAILABILITY = 'Inventory_Availability';
+
 // local script constants
 const REMOVE_NEGATIVE_QUANTITY = false; // set to true to remove negative quantities, false to keep them (NetSuite will reject negative quantities on inventory adjustments)
 const EXTERNAL_ID = 'SOME EXTERNAL ID';
@@ -20,6 +24,7 @@ const CONFIG = {
   location: 1, // map to NetSuite location internal id
   status: 1, // good
   date: '4/20/2026',
+  bin: 4314,
 };
 
 async function main() {
@@ -28,7 +33,7 @@ async function main() {
 
     console.log('Getting Dear Inventory Items...');
     // load dear inventory list items
-    const dearInventoryListExportFilePath = 'input/Inventory_List';
+    const dearInventoryListExportFilePath = `input/${DEAR_INVENTORY_LIST}`;
     const dearInventoryListItemRows = await parseCSV<DearInventoryItemRow>(
       dearInventoryListExportFilePath,
       {
@@ -45,7 +50,7 @@ async function main() {
     );
 
     // load dear inventory availability items
-    const dearInventoryAvailabilityFilePath = 'input/Inventory_Availability';
+    const dearInventoryAvailabilityFilePath = `input/${DEAR_INVENTORY_AVAILABILITY}`;
     const dearInventoryAvailabilityRows =
       await parseCSV<DearInventoryAvailabilityRow>(
         dearInventoryAvailabilityFilePath,

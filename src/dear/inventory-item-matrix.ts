@@ -9,6 +9,9 @@ import {
 import { INVENTORY_ITEM_MAPPINGS } from '../lib/configs/dear';
 import type { DearInventoryItemRow } from '../lib/types/dear';
 
+// filenames
+const INVENTORY_ITEM_MATRIX_LIST = 'Inventory_Matrix_List';
+
 // local script constants
 const DEBUG = false;
 const PRODUCT_CODE = 'ProductCode';
@@ -158,7 +161,7 @@ async function main() {
   try {
     console.log('Getting Matrix Items...');
 
-    const inventoryItemFilePath = 'input/Inventory_Matrix_List';
+    const inventoryItemFilePath = `input/${INVENTORY_ITEM_MATRIX_LIST}`;
     const inventoryItemRows = await parseCSV<DearInventoryItemRow>(
       inventoryItemFilePath,
     );

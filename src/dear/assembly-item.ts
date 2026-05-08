@@ -6,6 +6,11 @@ import type {
   DearInventoryItemRow,
 } from '../lib/types/dear';
 
+// filenames
+const SHOPIFY_IMPORT = 'SHOPIFY-ITEMS';
+const DEAR_ASSEMBLY_ITEM_BOM = 'Assembly_BOM_List';
+const DEAR_INVENTORY_ITEM = 'Inventory_List';
+
 // Types
 interface AssemblyComponent {
   componentSKU: string;
@@ -160,14 +165,14 @@ function getMaxComponentCount(
 async function main() {
   try {
     console.log('Getting Shopify Items...');
-    const shopifyExportFilePath = 'input/SHOPIFY-ITEMS';
+    const shopifyExportFilePath = `input/${SHOPIFY_IMPORT}`;
     const shopifyItemRows = await parseCSV<ShopifyItemRow>(
       shopifyExportFilePath,
     );
     console.log('There are', shopifyItemRows.length, 'Shopify item rows.');
 
     console.log('Generating assembly item list...');
-    const assemblyBomFilePath = 'input/Assembly_BOM_List';
+    const assemblyBomFilePath = `input/${DEAR_ASSEMBLY_ITEM_BOM}`;
     const assemblyBomRows =
       await parseCSV<DearAssemblyItemRow>(assemblyBomFilePath);
     console.log('There are', assemblyBomRows.length, 'assembly BOM rows.');
@@ -196,7 +201,7 @@ async function main() {
     }
 
     console.log('Loading DEAR inventory items...');
-    const inventoryItemFilePath = 'input/Inventory_List';
+    const inventoryItemFilePath = `input/${DEAR_INVENTORY_ITEM}`;
     const inventoryItemRows = await parseCSV<DearInventoryItemRow>(
       inventoryItemFilePath,
     );
