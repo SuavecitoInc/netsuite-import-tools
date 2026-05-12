@@ -10,8 +10,8 @@ import type {
 } from '../lib/types/shopify';
 
 // files
-const SHOPIFY_ITEMS = 'TN_PRODUCT_EXPORT';
-const SHOPIFY_INVENTORY = 'TN_INVENTORY_EXPORT';
+const SHOPIFY_ITEMS = 'GUNTHERS_PRODUCT_EXPORT';
+const SHOPIFY_INVENTORY = 'GUNTHERS_HQ_INVENTORY_EXPORT';
 
 // local script constants
 const REMOVE_NEGATIVE_QUANTITY = false; // set to true to remove negative quantities, false to keep them (NetSuite will reject negative quantities on inventory adjustments)

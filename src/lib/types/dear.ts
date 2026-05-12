@@ -161,3 +161,14 @@ export type DearSupplierContactRow = {
   Phone: string;
   JobTitle: string;
 };
+
+export type DearAvailabilityReportRow = {
+  ProductCode: string;
+  Quantity: number;
+  AverageCost: number;
+  Location: string;
+  Bin: string;
+  BatchOrSerialNumber: string;
+  ExpiryDate_YYYYMMDD: string;
+  ReceivedDate_YYYYMMDD: string;
+};

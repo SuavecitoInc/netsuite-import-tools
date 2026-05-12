@@ -40,6 +40,7 @@ export const SHOPIFY_FIELDS = {
   Barcode: 'Variant Barcode',
   Description: 'Body (HTML)',
   CostPerItem: 'Cost per item',
+  ProductType: 'Type',
 };
 
 export const NETSUITE_FIELDS = {
@@ -152,6 +153,10 @@ export const INVENTORY_ITEM_MAPPINGS: MAPPINGS = {
   },
   averagecost: {
     field: SHOPIFY_FIELDS.CostPerItem,
+    default: null,
+  },
+  producttype: {
+    field: SHOPIFY_FIELDS.ProductType,
     default: null,
   },
 };
