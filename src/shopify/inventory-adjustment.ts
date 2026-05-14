@@ -14,9 +14,10 @@ const SHOPIFY_ITEMS = 'GUNTHERS_PRODUCT_EXPORT';
 const SHOPIFY_INVENTORY = 'GUNTHERS_HQ_INVENTORY_EXPORT';
 
 // local script constants
-const REMOVE_NEGATIVE_QUANTITY = false; // set to true to remove negative quantities, false to keep them (NetSuite will reject negative quantities on inventory adjustments)
+const REMOVE_NEGATIVE_QUANTITY = true; // set to true to remove negative quantities, false to keep them (NetSuite will reject negative quantities on inventory adjustments)
 const EXTERNAL_ID = 'TN-SHOPIFY-TEST-INV-ADJ-42926'; // external id for NetSuite inventory adjustment record, can be used for upsert operations in NetSuite or just for reference
 const MEMO = 'TN-SHOPIFY-TEST-INV-ADJ-42926';
+const MAX_ROWS_PER_FILE = 1000;
 
 const CONFIG = {
   subsidiary: 4, // map to NetSuite subsidiary internal id
@@ -87,11 +88,23 @@ async function main() {
           return null;
         }
 
+        // check if "On hand (current)" quantity exists and is a valid number
+        if (
+          item['On hand (current)'] === undefined ||
+          isNaN(item['On hand (current)'])
+        ) {
+          console.warn(
+            `Invalid or missing "On hand (current)" quantity for SKU: ${item.SKU}`,
+          );
+          return null;
+        }
+
         if (REMOVE_NEGATIVE_QUANTITY) {
           console.warn(
             `REMOVE_NEGATIVE_QUANTITY is enabled for SKU: ${item.SKU}`,
           );
-          if (item['Available (not editable)'] <= 0) {
+          // Available (not editable)
+          if (item['On hand (current)'] <= 0) {
             console.warn(`Negative inventory for SKU: ${item.SKU} removed`);
             return null;
           }
@@ -106,7 +119,7 @@ async function main() {
           status: CONFIG.status,
           date: CONFIG.date,
           item: item.SKU,
-          available: item['Available (not editable)'],
+          available: item['On hand (current)'], // Available (not editable)
           averagecost: shopifyItemRow['Cost per item'],
         };
       })
@@ -127,10 +140,43 @@ async function main() {
       { id: 'available', title: 'available' },
       { id: 'averagecost', title: 'averagecost' },
     ];
-    const csvWriter = initializeCSV(outputFilename, headers);
+    const totalChunks = Math.max(
+      1,
+      Math.ceil(netSuiteImportItems.length / MAX_ROWS_PER_FILE),
+    );
 
-    await csvWriter.writeRecords(netSuiteImportItems);
-    console.log('NetSuite inventory adjustment CSV written to', outputFilename);
+    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+      const chunkStart = chunkIndex * MAX_ROWS_PER_FILE;
+      const chunkEnd = chunkStart + MAX_ROWS_PER_FILE;
+      const chunkPart = `part_${String(chunkIndex + 1).padStart(2, '0')}`;
+      const chunkRows = netSuiteImportItems
+        .slice(chunkStart, chunkEnd)
+        .map((row) => ({
+          ...row,
+          externalid: `${EXTERNAL_ID}_${chunkPart}`,
+          memo: `${MEMO}_${chunkPart}`,
+        }));
+      const chunkOutputFilename =
+        totalChunks === 1
+          ? outputFilename
+          : `${outputFilename}_part_${String(chunkIndex + 1).padStart(2, '0')}`;
+      const csvWriter = initializeCSV(chunkOutputFilename, headers);
+
+      await csvWriter.writeRecords(chunkRows);
+      console.log(
+        'NetSuite inventory adjustment CSV written to',
+        `${chunkOutputFilename}.csv`,
+        `(${chunkRows.length} rows)`,
+      );
+    }
+
+    console.log(
+      'Generated',
+      totalChunks,
+      'file(s) with up to',
+      MAX_ROWS_PER_FILE,
+      'rows each.',
+    );
     console.log(
       'Shopify inventory adjustment completed in',
       formatDurationMs(Date.now() - runStartedAt),

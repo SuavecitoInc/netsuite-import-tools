@@ -149,6 +149,18 @@ async function main() {
                 DEBUG,
               );
 
+        // get product type by handle if it does not already exist
+        const productType =
+          INVENTORY_ITEM_MAPPINGS.producttype.field &&
+          item[INVENTORY_ITEM_MAPPINGS.producttype.field]
+            ? item[INVENTORY_ITEM_MAPPINGS.producttype.field]
+            : getFieldValueByHandle(
+                item.Handle,
+                INVENTORY_ITEM_MAPPINGS.producttype.field,
+                filteredShopifyItemRows,
+                DEBUG,
+              );
+
         logConversionProgress(index + 1);
 
         // weight
@@ -196,6 +208,7 @@ async function main() {
           istaxable: INVENTORY_ITEM_MAPPINGS.istaxable.default,
           taxschedule: INVENTORY_ITEM_MAPPINGS.taxschedule.default,
           averagecost: item[INVENTORY_ITEM_MAPPINGS.averagecost.field],
+          producttype: productType ?? '',
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
@@ -236,6 +249,7 @@ async function main() {
       { id: 'istaxable', title: 'istaxable' },
       { id: 'taxschedule', title: 'taxschedule' },
       { id: 'averagecost', title: 'averagecost' },
+      { id: 'producttype', title: 'producttype' },
     ];
 
     const writeStartedAt = Date.now();
