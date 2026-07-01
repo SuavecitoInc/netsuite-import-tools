@@ -17,6 +17,7 @@
     "shopify:inventory-adjustment": "tsx src/shopify/inventory-adjustment.ts",
     "shopify:inventory-item-difference": "tsx src/shopify/inventory-item-difference.ts",
     "shopify:inventory-item-filter-missing-skus": "tsx src/shopify/inventory-item-filter-missing-skus.ts",
+    "netsuite:apparel-bins": "tsx src/netsuite/apparel-bins.ts",
     "clean": "rm -f ./output/*"
   },
   "author": "j-Riv <jriv@suavecito.com>",

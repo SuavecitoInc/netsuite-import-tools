@@ -16,8 +16,8 @@ import {
   gramsToPounds,
 } from './helpers';
 
-// const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
-const DEFAULT_INPUT_FILENAME = 'TRES_NOIR_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
+const DEFAULT_INPUT_FILENAME = 'GUNTHERS_PRODUCT_EXPORT'; // SHOPIFY-ITEMS-EXPORT
+const outputPrefix = 'GUNTHERS';
 
 // local script constants
 const DEBUG = false;
@@ -206,7 +206,8 @@ async function main() {
     );
 
     // export file name
-    const outputFilename = 'Shopify_to_NetSuite_Inventory_Items';
+    const outputFilename =
+      outputPrefix + '-Shopify_to_NetSuite_Inventory_Items';
 
     const headers = [
       { id: 'externalid', title: 'externalid' },
