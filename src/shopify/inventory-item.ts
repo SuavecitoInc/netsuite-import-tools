@@ -194,7 +194,7 @@ async function main() {
         istaxable: INVENTORY_ITEM_MAPPINGS.istaxable.default,
         taxschedule: INVENTORY_ITEM_MAPPINGS.taxschedule.default,
         averagecost: item[INVENTORY_ITEM_MAPPINGS.averagecost.field],
-        producttype: productType ?? '',
+        producttype: productType ? productType : 'None',
       };
     });
     const transformDoneAt = Date.now();
